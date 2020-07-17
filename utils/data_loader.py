@@ -65,7 +65,7 @@ def load_trajectory_od_intersection():
 
 def load_od(scale='full', with_hotpots=False, with_feature=False, with_distance=False, version='v3', common=True):
     if not common:
-        path = r'C:\Users\hkrept\PycharmProjects\ElectricVehicleMobility\data\transaction_201407.csv'
+        path = r'data/transaction_201407.csv'
         logging.info('Loading ' + path)
         df = pd.read_csv(path, parse_dates=['begin_time', 'end_time'], infer_datetime_format=True, low_memory=False)
         return df
@@ -92,7 +92,7 @@ def load_od(scale='full', with_hotpots=False, with_feature=False, with_distance=
                              low_memory=False)
             return df
         else:
-            path = os.path.join(project_path, 'data/transaction_common_201407.csv')
+            path = 'data/transaction_common_201407.csv'
     elif 'part' == scale:
         if with_hotpots:
             path = r'C:\Users\hkrep\PycharmProjects\ChargingEventsExtraction\data\od\od_with_hotpots.csv'
@@ -129,8 +129,7 @@ def load_cs(scale='full', date=None):
                                 infer_datetime_format=True, low_memory=False, na_values=['nan', '?', 'NaN'])
             dates_ = date
     elif 'part' == scale:
-        path = r'C:\Users\hkrept\PycharmProjects\ElectricVehicleMobility\data\ChargingStation\ChargeLocation' + \
-               date.strftime('%Y%m')
+        path = 'data/ChargingStation/ChargeLocation' +  date.strftime('%Y%m')
         df_cs = pd.read_csv(path, sep=',', names=['ID', 'cs_name', 'Longitude', 'Latitude', 'Online', 'chg_points'],
                             infer_datetime_format=True, low_memory=False, na_values=['nan', '?', 'NaN'])
         dates_ = date
