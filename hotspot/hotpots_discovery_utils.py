@@ -137,6 +137,7 @@ def to_integer_cube(original_x, original_y, original='geodetic'):
     return x, y, cube
 
 
+# If to_geodetic is True, then return center geodetic coordinates
 def cube_to_coordinate(cube, to_geodetic=False):
     # geodetic coordinates to cube index
     m = 400
@@ -150,8 +151,8 @@ def cube_to_coordinate(cube, to_geodetic=False):
         tr_lat = 22.842654
         X = (tr_lng - bl_lng) / n
         Y = (tr_lat - bl_lat) / m
-        x = x * X + bl_lng
-        y = tr_lat - y * Y
+        x = (x + 0.5) * X + bl_lng
+        y = tr_lat - (y + 0.5) * Y
     return x, y
 
 
