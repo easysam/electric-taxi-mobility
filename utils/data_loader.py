@@ -2,8 +2,10 @@ import pandas as pd
 import logging
 import glob
 import os
+import datetime
 import pickle
 import config
+
 from utils.cs_info import get_cs_info_by_date
 
 project_path = r'C:\Users\hkrept\PycharmProjects\ElectricVehicleMobility'
@@ -23,7 +25,7 @@ def load_ce(scale='full', with_source=False, version=None):
                 parse_dates = ['arrival_time', 'start_charging', 'begin_time', 'end_time', 'waiting_duration',
                                'charging_duration']
             else:
-                path = r'C:\Users\hkrep\PycharmProjects\ChargingEventsExtraction\data\ce\ce_' + version + '.csv'
+                path = r'data/ce/' + version + '.csv'
                 parse_dates = ['arrival_time', 'start_charging', 'end_time', 'waiting_duration', 'charging_duration']
                 logging.info('Loading ' + path)
                 temp_df = pd.read_csv(path, parse_dates=parse_dates)
@@ -55,9 +57,8 @@ def load_trajectory(with_status=False):
                            usecols=['plate', 'longitude', 'latitude', 'timestamp', 'velocity'])
 
 
-
 def load_trajectory_od_intersection():
-    path = os.path.join(project_path, 'data/201407et_list.pickle')
+    path = 'data/201407et_list.pickle'
     with open(path, 'rb') as f:
         traj_od_common = pickle.load(f)
     return traj_od_common
@@ -71,22 +72,20 @@ def load_od(scale='full', with_hotpots=False, with_feature=False, with_distance=
         return df
     if 'full' == scale:
         if with_hotpots:
-            common = load_trajectory_od_intersection()
-            path = r'C:\Users\hkrep\PycharmProjects\ChargingEventsExtraction\data\od\full_od_with_hotpots_' + version \
-                   + '.csv'
+            path = 'data/od/full_od_with_hotpots_' + version + '.csv'
             logging.info('Loading ' + path)
             df = pd.read_csv(path, parse_dates=['begin_time', 'end_time'], infer_datetime_format=True, low_memory=False)
             df.fillna(value={'load_label': -1, 'drop_label': -1}, axis=0, inplace=True)
             df = df.astype({'load_label': int, 'drop_label': int})
             return df
         elif with_feature:
-            path = r'C:\Users\hkrep\PycharmProjects\ChargingEventsExtraction\data\od\od_with_traveled_v5.csv'
+            path = 'data/od/od_with_traveled_v5.csv'
             logging.info('Loading ' + path)
             df = pd.read_csv(path, parse_dates=['begin_time', 'end_time'], infer_datetime_format=True, low_memory=False)
             df['seeking_duration'] = pd.to_timedelta(df['seeking_duration'])
             return df
         elif with_distance:
-            path = r'C:\Users\hkrep\PycharmProjects\ChargingEventsExtraction\data\od\od_with_distance_between_before.csv'
+            path = r'data/od/od_with_distance_between_before.csv'
             logging.info('Loading' + path)
             df = pd.read_csv(path, parse_dates=['begin_time', 'end_time', 'last_drop_time'], infer_datetime_format=True,
                              low_memory=False)
@@ -105,42 +104,17 @@ def load_od(scale='full', with_hotpots=False, with_feature=False, with_distance=
     return df
 
 
-def load_cs(scale='full', date=None):
-    logging.info('Loading \'C:\\Users\hkrep\PycharmProjects\ChargingEventsExtraction\data\ChargingStation\'')
-    if 'full' == scale:
-        if date is None:
-            dates_ = []
-            list_ = []
-            path = r'C:\Users\hkrep\PycharmProjects\ChargingEventsExtraction\data\ChargingStation'
-            all_files = glob.glob(os.path.join(path, "*"))
-            for f in all_files:
-                df_c = pd.read_csv(f, sep=',', names=['ID', 'cs_name', 'Longitude', 'Latitude', 'Online', 'chg_points'],
-                                   infer_datetime_format=True, low_memory=False, na_values=['nan', '?', 'NaN'])
-                f_datetime = pd.to_datetime(f.replace(path + '\ChargeLocation', ''), format='%Y%m')
-                dates_.append(f_datetime)
-                df_c['Date'] = f_datetime
-                list_.append(df_c)
-            df_cs = pd.concat(list_, ignore_index=True)
-            df_cs.set_index('Date', inplace=True)
-        else:
-            path = r'C:\Users\hkrep\PycharmProjects\ChargingEventsExtraction\data\ChargingStation\ChargeLocation' + \
-                   date.strftime('%Y%m')
-            df_cs = pd.read_csv(path, sep=',', names=['ID', 'cs_name', 'Longitude', 'Latitude', 'Online', 'chg_points'],
-                                infer_datetime_format=True, low_memory=False, na_values=['nan', '?', 'NaN'])
-            dates_ = date
-    elif 'part' == scale:
-        path = 'data/ChargingStation/ChargeLocation' +  date.strftime('%Y%m')
-        df_cs = pd.read_csv(path, sep=',', names=['ID', 'cs_name', 'Longitude', 'Latitude', 'Online', 'chg_points'],
-                            infer_datetime_format=True, low_memory=False, na_values=['nan', '?', 'NaN'])
-        dates_ = date
-    else:
-        raise NotImplementedError
+def load_cs(scale='full', date=datetime.datetime(2014, 7, 1)):
+    path = 'data/cs/ChargeLocation' + date.strftime('%Y%m')
+    logging.info('Loading' + path)
+    df_cs = pd.read_csv(path, sep=',', names=['ID', 'cs_name', 'Longitude', 'Latitude', 'Online', 'chg_points'],
+                        infer_datetime_format=True, low_memory=False, na_values=['nan', '?', 'NaN'])
+    dates_ = date
     return df_cs, dates_
 
 
 def load_clusters():
-    load_data_path = \
-        r'C:\Users\hkrep\PycharmProjects\ChargingEventsExtraction\data\transit_matrix\full_load_clusters.list_of_dict_v4'
+    load_data_path = 'data/transit_matrix/full_load_clusters.list_of_dict_v4'
     logging.info('Load ' + load_data_path)
     with open(load_data_path, 'rb') as f:
         load_hotpots = pickle.load(f)
@@ -148,7 +122,7 @@ def load_clusters():
 
 
 def drop_clusters():
-    drop_cluster_path = r'C:\Users\hkrep\PycharmProjects\ChargingEventsExtraction\data\transit_matrix\full_drop_clusters.list_of_dict_v4'
+    drop_cluster_path = 'data/transit_matrix/full_drop_clusters.list_of_dict_v4'
     logging.info('Load ' + drop_cluster_path)
     with open(drop_cluster_path, 'rb') as f:
         drop_clusters = pickle.load(f)
@@ -185,11 +159,14 @@ def pickle_load(file=None):
         with open(config.c2l_path, 'rb') as f:
             file = pickle.load(f)
     elif 'if_to_charge' == file:
-        with open(config.if_to_charge_path, 'rb') as f:
+        model_path = 'charging_behavior/whether_to_charge/model_80train.pickle'
+        logging.info('Loading ' + model_path)
+        with open(model_path, 'rb') as f:
             model = pickle.load(f)
-        with open(config.whether_charge_data_scaler_path, 'rb') as f:
+        scaler_path = 'charging_behavior/whether_to_charge/StandardScaler.pickle'
+        logging.info('Loading ' + scaler_path)
+        with open(scaler_path, 'rb') as f:
             scaler = pickle.load(f)
-        logging.info('Load whether charge model and data scaler.')
         return model, scaler
     elif 'where_to_charge' == file:
         with open(config.where_to_charge_path, 'rb') as f:
@@ -200,12 +177,14 @@ def pickle_load(file=None):
 
 
 def load_rest():
-    path = r'C:\Users\hkrep\PycharmProjects\ChargingEventsExtraction\data\rest\rest_events.csv'
+    path = 'data/rest/rest_events.csv'
+    logging.info('Loading' + path)
     rest_events = pd.read_csv(path, parse_dates=['start_time', 'end_time', 'duration'], infer_datetime_format=True)
     return rest_events
 
 
 def load_generated(version='v1'):
-    path = r'C:\Users\hkrep\PycharmProjects\ChargingEventsExtraction\data\rest\generated_rest_event_' + version + '.csv'
+    path = r'data/rest/generated_rest_event_' + version + '.csv'
+    logging.info('Loading' + path)
     generated_rest = pd.read_csv(path)
     return generated_rest
