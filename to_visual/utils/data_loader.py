@@ -4,9 +4,8 @@ import glob
 import os
 import datetime
 import pickle
-import config
+# import config
 
-from utils.cs_info import get_cs_info_by_date
 
 project_path = r'C:\Users\hkrept\PycharmProjects\ElectricVehicleMobility'
 
@@ -136,29 +135,15 @@ def road_shp():
     return road_shp_wgs84
 
 
-def load_driver_work_info():
-    path = config.driver_start_work_info_path
-    driver_work_info = pd.read_csv(path, )
-    return driver_work_info
+# def load_driver_work_info():
+#     path = config.driver_start_work_info_path
+#     driver_work_info = pd.read_csv(path, )
+#     return driver_work_info
 
 
 def pickle_load(file=None):
-    if 'l2d' == file:
-        with open(config.l2d_path, 'rb') as f:
-            file = pickle.load(f)
-    elif 'l2d_t' == file:
-        with open(config.l2d_time_path, 'rb') as f:
-            file = pickle.load(f)
-    elif 'd2l' == file:
-        with open(config.d2l_path, 'rb') as f:
-            file = pickle.load(f)
-    elif 'd2l_t' == file:
-        with open(config.d2l_time_path, 'rb') as f:
-            file = pickle.load(f)
-    elif 'c2l' == file:
-        with open(config.c2l_path, 'rb') as f:
-            file = pickle.load(f)
-    elif 'if_to_charge' == file:
+
+    if 'if_to_charge' == file:
         model_path = 'charging_behavior/whether_to_charge/model_80train.pickle'
         logging.info('Loading ' + model_path)
         with open(model_path, 'rb') as f:
@@ -168,9 +153,6 @@ def pickle_load(file=None):
         with open(scaler_path, 'rb') as f:
             scaler = pickle.load(f)
         return model, scaler
-    elif 'where_to_charge' == file:
-        with open(config.where_to_charge_path, 'rb') as f:
-            file = pickle.load(f)
     else:
         raise NotImplementedError
     return file

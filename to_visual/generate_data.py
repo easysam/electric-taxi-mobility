@@ -184,7 +184,7 @@ def generation(amount=10, df_cs=None):
                         #                         print(vehicle_rest.name, current_timestamp, 'd2p', drop_hs, load_hs, 'travel', move_distance)
                         status = 'occupied'
                 elif 'charging' == status:
-                    where_charge_features = pd.DataFrame(index=range(23))
+                    where_charge_features = pd.DataFrame(index=range(len(df_cs.index)))
                     #                 [traveled_distance, distances_to_cs.min(), np.median(distances_to_cs),
                     #                                                distances_to_cs.mean(), distances_to_cs.max(), time_of_day]
                     where_charge_features['max_dis'] = distances_to_cs.max()
@@ -192,12 +192,18 @@ def generation(amount=10, df_cs=None):
                     where_charge_features['mid_dis'] = np.median(distances_to_cs)
                     where_charge_features['min_dis'] = distances_to_cs.min()
                     where_charge_features['traveled_after_charged'] = traveled_distance
-                    where_charge_features['distance'] = distances_to_cs.reshape((-1))
+                    try:
+                        where_charge_features['distance'] = distances_to_cs.reshape((-1))
+                    except ValueError:
+                        print('distances_to_cs.reshape((-1))')
+                        print(distances_to_cs.reshape((-1)))
+                        print('where_charge_features')
+                        print(where_charge_features)
                     where_charge_features['weekday'] = 1 if current_timestamp.weekday() < 5 else 0
                     where_charge_features['time_of_day'] = time_of_day
                     where_charge_features['chg_points'] = df_cs['chg_points']
                     data = torch.from_numpy(where_charge_features.to_numpy()).to(device).float()
-                    data = data.view(-1, 23, len(where_charge_features.columns))
+                    data = data.view(-1, len(df_cs.index), len(where_charge_features.columns))
                     output = model(data)
 
                     output = softmax(output).view(-1).cpu().detach().numpy()

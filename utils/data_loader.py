@@ -21,7 +21,7 @@ def load_ce(scale='full', with_source=False, version=None):
             parse_dates = ['begin_time', 'start_charging', 'end_time', 'source_t']
         else:
             if version is None:
-                path = os.path.join(project_path, 'data/ce_v5_30min.csv')
+                path = 'data/ce/v5_30min.csv'
                 parse_dates = ['arrival_time', 'start_charging', 'begin_time', 'end_time', 'waiting_duration',
                                'charging_duration']
             else:
@@ -51,7 +51,7 @@ def load_trajectory(with_status=False):
                                     'cs_log', 'cs_name', 'cs_points', 'distance_to_cs', 'cs_date', 'status'],
                            na_values=['nan', '?', 'NaN'], header=0, index_col=None)
     else:
-        path = os.path.join(project_path, 'data/history_trajectories.csv')
+        path = 'data/history_trajectories.csv'
         logging.info('Loading ' + path)
         return pd.read_csv(path, sep=',', parse_dates=['timestamp'], infer_datetime_format=True, low_memory=False,
                            usecols=['plate', 'longitude', 'latitude', 'timestamp', 'velocity'])
