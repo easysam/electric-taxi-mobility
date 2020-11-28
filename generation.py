@@ -6,14 +6,9 @@ import utils.display as display
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-from scipy.spatial.distance import cdist
 from tqdm import tqdm
 from sklearn.metrics.pairwise import haversine_distances
-import charging_behavior.where_to_charge.NN_utility_model as NN_utility_model
-
-display.configure_pandas()
-display.configure_logging()
-tqdm.pandas()
+import result.charging_behavior.where_to_charge.NN_utility_model as NN_utility_model
 
 
 def generation(amount=10, df_cs=None):
@@ -32,7 +27,7 @@ def generation(amount=10, df_cs=None):
     p_hs = pd.DataFrame.from_dict(p_hs)
     d_hs = pd.DataFrame.from_dict(d_hs)
 
-    with open('generated_data/generation_input/departure_distributions.pickle', mode='rb') as f:
+    with open('result/generated_data/generation_input/departure_distributions.pickle', mode='rb') as f:
         departure_distributions = pickle.load(f)
 
     # Transit matrices
@@ -44,8 +39,8 @@ def generation(amount=10, df_cs=None):
         d2p = pickle.load(f)
     with open('data/transit_matrix/d2p_time_v3.list_of_df', 'rb') as f:
         d2p_t = pickle.load(f)
-    p2d_distance = pd.read_csv('generated_data/generation_input/p2d_distance.csv', index_col=[0, 1])['od_distance']
-    d2p_distance = pd.read_csv('generated_data/generation_input/d2p_distance.csv', index_col=[0, 1])[
+    p2d_distance = pd.read_csv('result/generated_data/generation_input/p2d_distance.csv', index_col=[0, 1])['od_distance']
+    d2p_distance = pd.read_csv('result/generated_data/generation_input/d2p_distance.csv', index_col=[0, 1])[
         'distance_before_od']
 
     wtc_model, whether_charge_scaler = data_loader.pickle_load('if_to_charge')
@@ -57,7 +52,7 @@ def generation(amount=10, df_cs=None):
     model = NN_utility_model.Net()
     model.to(device)
     # model_path = r'C:\Users\hkrep\PycharmProjects\ChargingEventsExtraction\data\preference_learning\pytorch_model\para_v2'
-    model_path = 'charging_behavior/where_to_charge/para_v3_30epoch.pkl'
+    model_path = 'result/charging_behavior/where_to_charge/para_v3_30epoch.pkl'
     model.load_state_dict(torch.load(model_path))
     model.eval()
     softmax = torch.nn.Softmax(dim=1)
@@ -185,7 +180,7 @@ def generation(amount=10, df_cs=None):
                         #                         print(vehicle_rest.name, current_timestamp, 'd2p', drop_hs, load_hs, 'travel', move_distance)
                         status = 'occupied'
                 elif 'charging' == status:
-                    where_charge_features = pd.DataFrame(index=range(23))
+                    where_charge_features = pd.DataFrame(index=range(len(df_cs.index)))
                     #                 [traveled_distance, distances_to_cs.min(), np.median(distances_to_cs),
                     #                                                distances_to_cs.mean(), distances_to_cs.max(), time_of_day]
                     where_charge_features['max_dis'] = distances_to_cs.max()
@@ -193,12 +188,18 @@ def generation(amount=10, df_cs=None):
                     where_charge_features['mid_dis'] = np.median(distances_to_cs)
                     where_charge_features['min_dis'] = distances_to_cs.min()
                     where_charge_features['traveled_after_charged'] = traveled_distance
-                    where_charge_features['distance'] = distances_to_cs.reshape((-1))
+                    try:
+                        where_charge_features['distance'] = distances_to_cs.reshape((-1))
+                    except ValueError:
+                        print('distances_to_cs.reshape((-1))')
+                        print(distances_to_cs.reshape((-1)))
+                        print('where_charge_features')
+                        print(where_charge_features)
                     where_charge_features['weekday'] = 1 if current_timestamp.weekday() < 5 else 0
                     where_charge_features['time_of_day'] = time_of_day
                     where_charge_features['chg_points'] = df_cs['chg_points']
                     data = torch.from_numpy(where_charge_features.to_numpy()).to(device).float()
-                    data = data.view(-1, 23, len(where_charge_features.columns))
+                    data = data.view(-1, len(df_cs.index), len(where_charge_features.columns))
                     output = model(data)
 
                     output = softmax(output).view(-1).cpu().detach().numpy()
@@ -224,7 +225,12 @@ def generation(amount=10, df_cs=None):
 
 
 if __name__ == '__main__':
+    # Initialization
+    display.configure_pandas()
+    display.configure_logging()
+    tqdm.pandas()
+
     df_cs, dates = data_loader.load_cs(date=datetime(2014, 7, 1))
     # df_cs是充电站分布
     generated_data = generation(amount=10, df_cs=df_cs)
-    generated_data.to_csv('generated_data/generated_data_v5.csv', index=False)
+    generated_data.to_csv('result/generated_data/generated_data_v5.csv', index=False)

@@ -3,5 +3,5 @@ data/
 venv/
 
 __pycache__/
-hotspot/__pycache__
+s1_preprocessing/hotspot/__pycache__
 utils/__pycache__

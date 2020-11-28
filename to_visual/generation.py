@@ -8,7 +8,7 @@ import numpy as np
 from datetime import datetime, timedelta
 from tqdm import tqdm
 from sklearn.metrics.pairwise import haversine_distances
-import charging_behavior.where_to_charge.NN_utility_model as NN_utility_model
+import result.charging_behavior.where_to_charge.NN_utility_model as NN_utility_model
 
 display.configure_pandas()
 display.configure_logging()
