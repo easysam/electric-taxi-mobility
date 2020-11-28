@@ -1,3 +1,4 @@
+import yaml
 import pandas as pd
 import logging
 import glob
@@ -5,11 +6,14 @@ import os
 import datetime
 import pickle
 import config
-
+from pathlib import Path
 from utils.cs_info import get_cs_info_by_date
 
-project_path = r'C:\Users\hkrept\PycharmProjects\ElectricVehicleMobility'
 
+# configure the working directory to the project root path
+# with open("config.yaml", "r", encoding="utf8") as f:
+#     conf = yaml.load(f, Loader=yaml.FullLoader)
+# os.chdir(conf["project_path"])
 
 def load_ce(scale='full', with_source=False, version=None):
     if 'full' == scale:
@@ -21,11 +25,11 @@ def load_ce(scale='full', with_source=False, version=None):
             parse_dates = ['begin_time', 'start_charging', 'end_time', 'source_t']
         else:
             if version is None:
-                path = 'data/ce/v5_30min.csv'
+                path = 'data/charging_event/ce_v5_30min.csv'
                 parse_dates = ['arrival_time', 'start_charging', 'begin_time', 'end_time', 'waiting_duration',
                                'charging_duration']
             else:
-                path = r'data/ce/' + version + '.csv'
+                path = r'data/charging_event/ce_' + version + '.csv'
                 parse_dates = ['arrival_time', 'start_charging', 'end_time', 'waiting_duration', 'charging_duration']
                 logging.info('Loading ' + path)
                 temp_df = pd.read_csv(path, parse_dates=parse_dates)
@@ -105,9 +109,9 @@ def load_od(scale='full', with_hotpots=False, with_feature=False, with_distance=
 
 
 def load_cs(scale='full', date=datetime.datetime(2014, 7, 1)):
-    path = 'data/cs/ChargeLocation' + date.strftime('%Y%m')
+    path = 'data/charging_station/ChargeLocation' + date.strftime('%Y%m')
     logging.info('Loading' + path)
-    df_cs = pd.read_csv(path, sep=',', names=['ID', 'cs_name', 'Longitude', 'Latitude', 'Online', 'chg_points'],
+    df_cs = pd.read_csv(path, sep=',', names=['ID', 'cs_name', 'lng', 'lat', 'Online', 'chg_points'],
                         infer_datetime_format=True, low_memory=False, na_values=['nan', '?', 'NaN'])
     dates_ = date
     return df_cs, dates_
