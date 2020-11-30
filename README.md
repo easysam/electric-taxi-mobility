@@ -5,8 +5,21 @@ Modeling the mobility of electric taxi.
 ### 1.1 Dependency
 You need install following python package: `pandas`, `numpy`, `pyyaml`.
 ### 1.2 Usage
+Preliminary: you need set the "project_path" in "config.yaml" as project root path.
 #### 1.2.1 Mobility Modeling & Data Generation
-1. you need set the "project_path" in "config.yaml" as project root path.
+Stage 1 preprocessing
+1. ...
+
+Stage 2 mobility modeling
+1. to update transition model, run `s2_mobility/transition.py`.
+2. to update whether to charge model, run `s2_mobility/charging_behavior/whether_to_charge_data_preparation.py` and 
+`s2_mobility/charging_behavior/whether_to_charge.py`, in turn.
+3. to update where to charge model, run `s2_mobility/charging_behavior/where_to_charge_data_preparation.py` and 
+`s2_mobility/charging_behavior/where_to_charge.py`, in turn.
+4. to update rest pattern, run `s2_mobility/rest_pattern.py`.
+
+Stage 3 data generation
+1. `generation.py`
 
 #### 1.2.2 Other Purpose
 
