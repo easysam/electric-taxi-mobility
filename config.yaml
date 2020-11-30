@@ -1,1 +1,4 @@
 project_path: "C:\\Users\\hkrep\\PycharmProjects\\electric-taxi-mobility"
+mobility:
+  charge:
+    where_feature: ""

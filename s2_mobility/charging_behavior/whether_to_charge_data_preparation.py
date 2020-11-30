@@ -40,8 +40,9 @@ def find_traveled_distance(od, df_trajectory, df_ce):
     if od['d_t'].to_datetime64() in licence_ce['last_d_t'].unique():
         charged = True
         # calculate seeking time
-        ce_index = licence_ce['last_d_t'].searchsorted(od['d_t'])
-        seeking_duration = licence_ce.at[licence_ce.index[ce_index], 'start_charging'] - od['d_t']
+        licence_ce_wo_nat = licence_ce.dropna(subset=["last_d_t"])
+        ce_index = licence_ce_wo_nat['last_d_t'].searchsorted(od['d_t'])
+        seeking_duration = licence_ce_wo_nat.at[licence_ce_wo_nat.index[ce_index], 'start_charging'] - od['d_t']
     else:
         charged = False
 
@@ -123,7 +124,7 @@ if __name__ == '__main__':
     df_distances_to_cs['mean_dis'] = df_distances_to_cs.mean(axis=1)
 
     # concat distance data back to transaction data
-    pd.concat([od, df_distances_to_cs], axis=1).to_csv(r'data/od/od_with_traveled_v6.csv', index=False)
+    pd.concat([od, df_distances_to_cs], axis=1).to_csv(r'data/od/od_with_traveled_v7.csv', index=False)
 
     # check column names
     # pd.concat([od, df_distances_to_cs], axis=1).columns

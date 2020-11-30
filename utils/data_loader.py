@@ -83,7 +83,7 @@ def load_od(scale='full', with_hotpots=False, with_feature=False, with_distance=
             df = df.astype({'load_label': int, 'drop_label': int})
             return df
         elif with_feature:
-            path = 'data/od/od_with_traveled_v6.csv'
+            path = 'data/od/od_with_traveled_v7.csv'
             logging.info('Loading ' + path)
             df = pd.read_csv(path, parse_dates=['o_t', 'd_t'], infer_datetime_format=True, low_memory=False)
             df['seeking_duration'] = pd.to_timedelta(df['seeking_duration'])
@@ -126,7 +126,7 @@ def load_clusters():
 
 
 def drop_clusters():
-    drop_cluster_path = 'data/transit_matrix/full_drop_clusters.list_of_dict_v4'
+    drop_cluster_path = 'data/hotspot/full_drop_clusters.list_of_dict_v4'
     logging.info('Load ' + drop_cluster_path)
     with open(drop_cluster_path, 'rb') as f:
         drop_clusters = pickle.load(f)
