@@ -88,10 +88,6 @@ if __name__ == '__main__':
     gt = gt[df_cs['cs_name']]
     # Transform number to probability distribution
     gt = gt.fillna(0).divide(gt.sum(axis=1), axis=0)
-    # save GROUND TRUTH to local
-    path = 'result/mobility/charge/whether/train_set'
-    os.makedirs(path, exist_ok=True)
-    gt.to_csv(os.path.join(path, "all_formatted_annotation_distribution_v3.csv"), index=False)
 
     # FEATURE
     # 删掉多余feature, 为了按站给record，feature要作为 identifiers set.
@@ -109,5 +105,8 @@ if __name__ == '__main__':
     ce_feature['time_of_day'] = ce_feature['source_d_t'].dt.hour + ce_feature['source_d_t'].dt.minute / 60
     ce_feature.drop('source_d_t', axis=1, inplace=True)
     ce_feature = pd.merge(ce_feature, df_cs['chg_points'], left_on='cs_index', right_index=True, how='left')
+
+    # save GROUND TRUTH to local
+    gt.to_csv(conf["mobility"]["charge"]["where_label"], index=False)
     # save feature to local
-    ce_feature.to_csv("result/mobility/charge/where/where_charge_feature.csv", index=False)
+    ce_feature.to_csv(conf["mobility"]["charge"]["where_feature"], index=False)

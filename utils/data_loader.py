@@ -83,7 +83,7 @@ def load_od(scale='full', with_hotpots=False, with_feature=False, with_distance=
             df = df.astype({'load_label': int, 'drop_label': int})
             return df
         elif with_feature:
-            path = 'data/od/od_with_traveled_v7.csv'
+            path = 'data/mobility/charge/whether/od_with_traveled_v7.csv'
             logging.info('Loading ' + path)
             df = pd.read_csv(path, parse_dates=['o_t', 'd_t'], infer_datetime_format=True, low_memory=False)
             df['seeking_duration'] = pd.to_timedelta(df['seeking_duration'])

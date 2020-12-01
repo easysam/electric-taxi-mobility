@@ -1,4 +1,8 @@
 project_path: "C:\\Users\\hkrep\\PycharmProjects\\electric-taxi-mobility"
+
 mobility:
   charge:
-    where_feature: ""
+    whether_feature_label: "data/mobility/charge/whether/od_with_traveled_v7.csv"
+    where_feature: "data/mobility/charge/where/where_charge_feature.csv"
+    where_label: "data/mobility/charge/where/all_formatted_annotation_distribution_v3.csv"
+    where_model: "result/mobility/charge/where/mlp.para"

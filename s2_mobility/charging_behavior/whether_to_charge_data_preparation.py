@@ -124,7 +124,7 @@ if __name__ == '__main__':
     df_distances_to_cs['mean_dis'] = df_distances_to_cs.mean(axis=1)
 
     # concat distance data back to transaction data
-    pd.concat([od, df_distances_to_cs], axis=1).to_csv(r'data/od/od_with_traveled_v7.csv', index=False)
+    pd.concat([od, df_distances_to_cs], axis=1).to_csv(conf["mobility"]["charge"]["whether_feature_label"], index=False)
 
     # check column names
     # pd.concat([od, df_distances_to_cs], axis=1).columns
