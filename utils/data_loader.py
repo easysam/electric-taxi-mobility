@@ -47,14 +47,14 @@ def load_ce(scale='full', with_source=False, version=None):
 
 def load_trajectory(with_status=False):
     if with_status:
-        path = r'C:\Users\hkrep\PycharmProjects\ChargingEventsExtraction\data\trajectory\trajectories_with_dis_status.csv'
-
+        path = 'data/raw/trajectory/trajectories_with_dis_status.csv'
         logging.info('Loading ' + path)
-        return pd.read_csv(path, sep=',', parse_dates=['timestamp'], infer_datetime_format=True, low_memory=False,
+        return pd.read_csv(path, parse_dates=['timestamp'], infer_datetime_format=True, low_memory=False,
                            usecols=['timestamp', 'Licence', 'Longitude', 'Latitude', 'Speed', 'cs_index', 'cs_lat',
                                     'cs_log', 'cs_name', 'cs_points', 'distance_to_cs', 'cs_date', 'status'],
                            na_values=['nan', '?', 'NaN'], header=0, index_col=None)
     else:
+        # history_trajectories.csv is only containing electric taxi, instead of internal combustion vehicle taxi.
         path = 'data/history_trajectories.csv'
         logging.info('Loading ' + path)
         return pd.read_csv(path, sep=',', parse_dates=['timestamp'], infer_datetime_format=True, low_memory=False,

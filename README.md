@@ -3,7 +3,9 @@ Modeling the mobility of electric taxi.
 
 ## 1. Getting Start
 ### 1.1 Dependency
-You need install following python package: `pandas`, `numpy`, `pyyaml`.
+The project uses `Python>=3.7`
+
+You need install following python package: `pandas`, `numpy`, `sklearn`, `xgboost`, `pyyaml`.
 ### 1.2 Usage
 Preliminary: you need set the "project_path" in "config.yaml" as project root path.
 #### 1.2.1 Mobility Modeling & Data Generation
