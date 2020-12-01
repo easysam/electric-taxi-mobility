@@ -4,10 +4,11 @@ import datetime
 import logging
 import numpy as np
 import pandas as pd
-from  tqdm import tqdm
+from tqdm import tqdm
 from sklearn.metrics.pairwise import haversine_distances
 from utils import data_loader, display
 from utils.vector_haversine_distances import haversine_np
+AVG_EARTH_RADIUS = 6371.0088
 
 
 # 统计带标注数据集中每个站的充电事件轨迹点离站的距离
@@ -18,12 +19,8 @@ def show_max_distance_of_ce(ce):
 def show_max_distance_after_arrival(ce):
     trajectory_location = df_trajectory.loc[ce['arrived']: ce['end'], ['Latitude', 'Longitude']].values
     cs_location = cs_info.loc[cs_info['cs_name'] == ce['cs'], ['Latitude', 'Longitude']].values
-
-    # earth radius(km)
-    AVG_EARTH_RADIUS = 6371.0088
     # calculate distance between drop location and CS location, and midian, min, max, mean
     distances_to_cs = haversine_distances(np.radians(trajectory_location), np.radians(cs_location)) * AVG_EARTH_RADIUS
-
     return distances_to_cs.max()
 
 
@@ -144,8 +141,7 @@ def search_arrival(ce):
     wait_contained_trajectory = df_trajectory.loc[ce['begin_time_index']: ce['begin_time_index'] - 100: -1].copy()
     wait_location = wait_contained_trajectory[['Latitude', 'Longitude']].values
     cs_location = cs_info.loc[cs_info['cs_name'] == ce['cs_name'], ['Latitude', 'Longitude']].values
-    # earth radius(km)
-    AVG_EARTH_RADIUS = 6371.0088
+
     # calculate distance between drop location and CS location, and midian, min, max, mean
     distances_to_cs = haversine_distances(np.radians(wait_location), np.radians(cs_location)) * AVG_EARTH_RADIUS
     wait_contained_trajectory['distance_to_cs'] = distances_to_cs
@@ -181,7 +177,6 @@ def search_arrival(ce):
     #     if (ce['licence'] == '粤B0BA49') and (ce['cs_name'] == 'A08'):
     #         print(arrival_time, start_charging)
     #         print(ce)
-
     return ce
 
 
@@ -201,17 +196,17 @@ if __name__ == '__main__':
     cs_info, date = data_loader.load_cs(date=datetime.datetime(2014, 7, 1))
     gt = pd.read_csv('./gt.csv', sep='\s*,\s*', engine='python', encoding='utf-8-sig')
 
-    # 计算每个轨迹点距离其前面一个轨迹点的球面距离
+    # Calculate geodetic distance to the sequentially previous GPS point for each GPS point
     logging.info('Calculating distance between points.')
-    df_trajectory['Distance'] = haversine_np(df_trajectory.Longitude.shift(), df_trajectory.Latitude.shift(),
+    df_trajectory['Distance'] = haversine_np(df_trajectory['Longitude'].shift(), df_trajectory['Latitude'].shift(),
                                              df_trajectory['Longitude'], df_trajectory['Latitude'])
     df_trajectory.loc[df_trajectory['Licence'] != df_trajectory['Licence'].shift(), 'Distance'] = None
-    # 计算时间间隔
+    # Calculate temporal distance to the sequentially previous GPS point for each GPS point
     df_trajectory['interval'] = df_trajectory['timestamp'] - df_trajectory['timestamp'].shift()
     df_trajectory.loc[df_trajectory['Licence'] != df_trajectory['Licence'].shift(), 'interval'] = None
-    # 根据阈值给出大间隔标记
+    # big_interval flag indicates that there is a big interval (15min) between GPS points and sequentially previous one.
     df_trajectory['big_interval'] = df_trajectory['interval'] > datetime.timedelta(minutes=15)
-    # 大间隔且点距超过0.1KM的定为异常点
+    # If a GPS point is labeled as big_interval and the distance to previous one bigger than 100 meters, its not valid.
     df_trajectory['valid'] = ~(df_trajectory['big_interval'] & (df_trajectory['Distance'] > 0.1))
 
     # Extract charging event info (charger distance to center location etc.) for each charging station
@@ -228,5 +223,6 @@ if __name__ == '__main__':
     waiting_duration = result.progress_apply(search_arrival, axis=1)
 
     # todo: one of 'arrival_time', 'start_charging', 'begin_time' is useless, which needs to be inferred in above code.
+    # the "begin_time" is useless
     waiting_duration[['licence', 'arrival_time', 'start_charging', 'begin_time', 'end_time', 'waiting_duration',
-                      'charging_duration', 'cs_name', 'valid']].to_csv('data/charging_event/ce_30min.csv', index=False)
+                      'charging_duration', 'cs_name', 'valid']].to_csv('data/charging_event/ce_15min.csv', index=False)
