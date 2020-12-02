@@ -10,6 +10,7 @@ You need install following python package: `pandas`, `numpy`, `sklearn`, `xgboos
 Preliminary: you need set the "project_path" in "config.yaml" as project root path.
 #### 1.2.1 Mobility Modeling & Data Generation
 **Stage 1** preprocessing
+
 1. to extract charging event, from raw trajectories and charging station info, run 
 `s1_preprocessing/charging_event_extraction/charging_event_extraction.py`
 2. to cluster pick-up or drop-off hotspots, run `...`
@@ -37,3 +38,62 @@ Preliminary: you need set the "project_path" in "config.yaml" as project root pa
 `d_t`, `d_l`: timestamp and drop-off hotspot label for destination of transaction (OD).
 
 `source_d_t`, `source_d_l`: timestamp and drop-off hotspot label for destination of last transaction of charging event (CE).
+
+## 3.Coord Transform
+
+*The mutual transformation of Baidu coordinate system (bd-09), Mars coordinate system (National Bureau of Surveying and mapping, gcj02), WGS84 coordinate system*
+
+### 3.1 coordTransform_utils.py
+
+import the function you need
+
+```bash
+gcj02_to_bd09(lng, lat) # gcj02->bd-09
+bd09_to_gcj02(lng, lat) # bd-09->gcj02
+wgs84_to_gcj02(lng, lat) # WGS84->gcj02
+gcj02_to_wgs84(lng, lat) # gcj02->WGS84
+bd09_to_wgs84(lng, lat) # bd-09->WGS84
+wgs84_to_bd09(lng, lat) # WGS84->bd-09
+
+# address 2 gcj02 => need Amap API Key
+g = Geocoding('API_KEY')
+g.geocode('北京市朝阳区朝阳公园')
+```
+
+### 3.2 coord_converter.py 
+
+```bash
+# help
+python coord_converter.py -h
+```
+
+```bash
+
+Convert coordinates in csv files.
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+arguments:
+  -i , --input          Location of input file
+  -o , --output         Location of output file
+  -t , --type           Convert type, must be one of: g2b, b2g, w2g, g2w, b2w,
+                        w2b
+  -n , --lng_column     Column name for longitude (default: lng)
+  -a , --lat_column     Column name for latitude (default: lat)
+  -s , --skip_invalid_row
+                        Whether to skip invalid row (default: False)
+```
+
+for example (if you have the input file named tes_input.csv )
+
+```bash
+# Do not specify the latitude and longitude column name (default : 'lng','lat') 
+$ python coord_converter.py -i test_input.csv -o test_output.csv -t b2g
+
+# specify the latitude and longitude column name
+$ python coord_converter.py -i test_input.csv -o test_output.csv -t b2g -n 经度 -a 纬度
+
+# skip the Invalid line (default : don't skip)
+$ python coord_converter.py -i test_input.csv -o test_output.csv -t b2g -n 经度 -a 纬度 -s True
+```
