@@ -10,7 +10,10 @@ You need install following python package: `pandas`, `numpy`, `sklearn`, `xgboos
 Preliminary: you need set the "project_path" in "config.yaml" as project root path.
 #### 1.2.1 Mobility Modeling & Data Generation
 **Stage 1** preprocessing
-1. ...
+1. to extract charging event, from raw trajectories and charging station info, run 
+`s1_preprocessing/charging_event_extraction/charging_event_extraction.py`
+2. to cluster pick-up or drop-off hotspots, run `...`
+3. to conduct the GPS trajectory map matching, please refer to the `easysam/IVMM` (search it in GitHub) project.
 
 **Stage 2** mobility modeling
 1. to update transition model, run `s2_mobility/transition.py`.
