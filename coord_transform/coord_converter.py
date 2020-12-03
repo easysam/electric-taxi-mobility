@@ -45,7 +45,7 @@ def convert():
     with open(OUTPUT, 'w', encoding='utf8') as output_file:
         output_file_writer = csv.writer(output_file, lineterminator='\n')
 
-        with open(INPUT, 'r') as input_file:
+        with open(INPUT, 'r',encoding='utf8') as input_file:
             input_file_reader = csv.reader(input_file)
             headers = next(input_file_reader)
             lng_index, lat_index = get_lng_lat_index(headers)
