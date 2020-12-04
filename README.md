@@ -39,7 +39,14 @@ python ./coord_transform/coord_converter.py -i ./coord_transform/charging_statio
 
 the result is in the coord_transform file folder, we transform BD-09  coordinate to WGS-84  coordinate 
 
-### 2.2 Variable meaning
+### 2.2 python crawler
+
+run spider/XXX-APP/extract_station_meta.py
+
+We use python crawler to obtain charging station information on mobile phone app, the information for the charging station we want is stored in a folder named station_meta, and the web files required to extract information are stored in a folder called chargeApp.
+
+
+### 2.3 Variable meaning
 
 `o_t`, `o_l`: timestamp and pick-up hotspot label for origin of transaction (OD).
 
