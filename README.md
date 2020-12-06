@@ -1,6 +1,6 @@
 # electric-taxi-mobility
 Modeling the mobility of electric taxi.
-![Framework](https://github.com/easysam/electric-taxi-mobility/blob/master/img/framework.png?raw=true)
+
 ## 1. Getting Start
 ### 1.1 Dependency
 The project uses `Python>=3.7`
