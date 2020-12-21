@@ -6,7 +6,7 @@ import datetime
 import utils.data_loader as data_loader
 
 
-def count_transits(df_od, a, b, a_t, b_t):
+def count_transits(df_od, a, b, a_t, b_t, duration_min=20):
     """
     Statistically compute the transit probability and mean duration.
     :param df_od: original od (transaction) DataFrame
@@ -14,12 +14,13 @@ def count_transits(df_od, a, b, a_t, b_t):
     :param b: transition destination
     :param a_t:
     :param b_t:
+    :param duration_min:
     :return:
     """
     _transits_prob = []
     _transits_mean_time = []
     start_time = datetime.datetime(1, 1, 1, 0, 0, 0)
-    duration = datetime.timedelta(minutes=20)
+    duration = datetime.timedelta(minutes=duration_min)
 
     # Calculate time in the trip
     df_od['time_duration'] = (df_od[b_t] - df_od[a_t]).dt.total_seconds()

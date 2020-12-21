@@ -1,6 +1,15 @@
 project_path: "C:\\Users\\hkrep\\PycharmProjects\\electric-taxi-mobility"
 
 mobility:
+  transition:
+    utility_xgboost:
+      p2d_train_feature: "data/mobility/transition/utility_xgboost/p2d_train_feature.npy"
+      p2d_train_gt: "data/mobility/transition/utility_xgboost/p2d_train_gt.csv"
+      p2d_val_od: "data/mobility/transition/utility_xgboost/p2d_val_od.csv"
+      p2d_val_feature: "data/mobility/transition/utility_xgboost/p2d_val_feature.npy"
+      p2d_val_gt: "data/mobility/transition/utility_xgboost/p2d_val_gt.csv"
+      p2d_model: "result/mobility/transition/utility_xgboost/p2d_XGBRegressor.pkl"
+      p2d_scaler: "result/mobility/transition/utility_xgboost/p2d_StandardScaler.pkl"
   charge:
     whether_feature_label: "data/mobility/charge/whether/od_with_traveled_v7.csv"
     where_feature: "data/mobility/charge/where/where_charge_feature.csv"
