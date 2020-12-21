@@ -5,7 +5,7 @@ import glob
 import os
 import datetime
 import pickle
-import config
+import deprecated_config
 from pathlib import Path
 from utils.cs_info import get_cs_info_by_date
 
@@ -141,26 +141,26 @@ def road_shp():
 
 
 def load_driver_work_info():
-    path = config.driver_start_work_info_path
+    path = deprecated_config.driver_start_work_info_path
     driver_work_info = pd.read_csv(path, )
     return driver_work_info
 
 
 def pickle_load(file=None):
     if 'l2d' == file:
-        with open(config.l2d_path, 'rb') as f:
+        with open(deprecated_config.l2d_path, 'rb') as f:
             file = pickle.load(f)
     elif 'l2d_t' == file:
-        with open(config.l2d_time_path, 'rb') as f:
+        with open(deprecated_config.l2d_time_path, 'rb') as f:
             file = pickle.load(f)
     elif 'd2l' == file:
-        with open(config.d2l_path, 'rb') as f:
+        with open(deprecated_config.d2l_path, 'rb') as f:
             file = pickle.load(f)
     elif 'd2l_t' == file:
-        with open(config.d2l_time_path, 'rb') as f:
+        with open(deprecated_config.d2l_time_path, 'rb') as f:
             file = pickle.load(f)
     elif 'c2l' == file:
-        with open(config.c2l_path, 'rb') as f:
+        with open(deprecated_config.c2l_path, 'rb') as f:
             file = pickle.load(f)
     elif 'if_to_charge' == file:
         model_path = 'charging_behavior/whether_to_charge/model_80train.pickle'
@@ -173,7 +173,7 @@ def pickle_load(file=None):
             scaler = pickle.load(f)
         return model, scaler
     elif 'where_to_charge' == file:
-        with open(config.where_to_charge_path, 'rb') as f:
+        with open(deprecated_config.where_to_charge_path, 'rb') as f:
             file = pickle.load(f)
     else:
         raise NotImplementedError

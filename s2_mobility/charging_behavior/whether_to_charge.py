@@ -5,8 +5,7 @@ import numpy as np
 from tqdm import tqdm
 import xgboost as xgb
 from sklearn import preprocessing, metrics
-from utils import display
-from utils import data_loader
+from utils import display, data_loader
 
 
 def process_grp(od):

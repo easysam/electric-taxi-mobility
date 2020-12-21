@@ -106,11 +106,11 @@ def generate_cube_index(df_od, m=400, n=800):
     tr_lat = 22.842654
     X = (tr_lng - bl_lng) / n
     Y = (tr_lat - bl_lat) / m
-    df_od['original_x'] = ((df_od['original_log'] - bl_lng) / X).apply(math.floor)
-    df_od['original_y'] = ((tr_lat - df_od['original_lat']) / Y).apply(math.floor)
+    df_od['original_x'] = np.floor((df_od['original_log'] - bl_lng) / X).astype(int)
+    df_od['original_y'] = np.floor((tr_lat - df_od['original_lat']) / Y).astype(int)
     df_od['original_cube'] = df_od['original_x'] + df_od['original_y'] * n
-    df_od['destination_x'] = ((df_od['destination_log'] - bl_lng) / X).apply(math.floor)
-    df_od['destination_y'] = ((tr_lat - df_od['destination_lat']) / Y).apply(math.floor)
+    df_od['destination_x'] = np.floor((df_od['destination_log'] - bl_lng) / X).astype(int)
+    df_od['destination_y'] = np.floor((tr_lat - df_od['destination_lat']) / Y).astype(int)
     df_od['destination_cube'] = df_od['destination_x'] + df_od['destination_y'] * n
     return df_od
 
