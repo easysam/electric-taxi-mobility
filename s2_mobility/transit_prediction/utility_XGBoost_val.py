@@ -29,9 +29,20 @@ if __name__ == '__main__':
     p2d_pred_y = xgbr.predict(p2d_x)
     p2d_gt["pred_rate"] = p2d_pred_y
 
-    kl = p2d_gt.groupby("original_cube").apply(
+    kl_pred = p2d_gt.groupby("original_cube").apply(
         lambda x: kl(MinMaxScaler().fit_transform(x["demand_17_et"].to_numpy().reshape(-1, 1)),
-                     MinMaxScaler().fit_transform((x["pred_rate"]*x["demand_all"]).to_numpy().reshape(-1, 1)))
+                     MinMaxScaler().fit_transform((x["pred_rate"] * x["demand_all"]).to_numpy().reshape(-1, 1)))
     )
 
-    print(kl.mean())
+    kl_all = p2d_gt.groupby("original_cube").apply(
+        lambda x: kl(MinMaxScaler().fit_transform(x["demand_17_et"].to_numpy().reshape(-1, 1)),
+                     MinMaxScaler().fit_transform(x["demand_all"].to_numpy().reshape(-1, 1)))
+    )
+
+    kl_et = p2d_gt.groupby("original_cube").apply(
+        lambda x: kl(MinMaxScaler().fit_transform(x["demand_17_et"].to_numpy().reshape(-1, 1)),
+                     MinMaxScaler().fit_transform(x["demand_14_et"].to_numpy().reshape(-1, 1)))
+    )
+    print("Kullback–Leibler divergence\nprediction: {:.2f}, 14all: {:.2f}, 14EV: {:.2f}"
+          .format(kl_pred.mean(), kl_all.mean(), kl_et.mean())
+          )
