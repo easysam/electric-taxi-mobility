@@ -30,8 +30,8 @@ Preliminary: you need set the "project_path" in "config.yaml" as project root pa
 #### 1.2.2 Other Purpose
 
 ## 2. For developer
-
-### 2.1 coord Transform
+### 2.1 Utils
+#### 2.1.1 coord Transform
 
 ```bash
 python ./coord_transform/coord_converter.py -i ./coord_transform/charging_station_bd.csv -o ./coord_transform/charging_station_wsg.csv -t b2g -n lng -a lat
@@ -39,14 +39,14 @@ python ./coord_transform/coord_converter.py -i ./coord_transform/charging_statio
 
 the result is in the coord_transform file folder, we transform BD-09  coordinate to WGS-84  coordinate 
 
-### 2.2 python crawler
+#### 2.1.2 python crawler
 
 run spider/XXX-APP/extract_station_meta.py
 
 We use python crawler to obtain charging station information on mobile phone app, the information for the charging station we want is stored in a folder named station_meta, and the web files required to extract information are stored in a folder called chargeApp.
 
-
-### 2.3 Variable meaning
+## 3 Documentation
+### 3.1 Variable meaning
 
 `o_t`, `o_l`: timestamp and pick-up hotspot label for origin of transaction (OD).
 
@@ -54,5 +54,11 @@ We use python crawler to obtain charging station information on mobile phone app
 
 `source_d_t`, `source_d_l`: timestamp and drop-off hotspot label for destination of last transaction of charging event (CE).
 
-
-
+### 3.2 Codes
+#### 3.2.1 s1_preprocessing
+##### `transactions_processing_14.py`
+Cluster pick-up and drop-off events for taxi in 2017.4
+##### `transactions_processing_17.py`
+Cluster pick-up and drop-off events for taxi in 2017.6
+#### 3.2.2 s2_mobility
+#### 3.2.3 s3_generation
