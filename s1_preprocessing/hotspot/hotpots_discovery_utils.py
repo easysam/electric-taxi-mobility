@@ -163,12 +163,10 @@ def hotspots_discovery_meanshift(transactions, event='load'):
     #                      & (transactions.begin_time.dt.minute < 5), ['original_lat', 'original_log']].values
     if 'load' == event:
         X = transactions[['original_x', 'original_y']].values
-        label_name = 'load_label'
-        cube_name = 'original_cube'
+        label_name, cube_name = 'load_label', 'original_cube'
     elif 'drop' == event:
         X = transactions[['destination_x', 'destination_y']].values
-        label_name = 'drop_label'
-        cube_name = 'destination_cube'
+        label_name, cube_name = 'drop_label', 'destination_cube'
     else:
         raise NotImplementedError
     cluster_centers, labels = meanshift_cluster(X)

@@ -58,6 +58,11 @@ We use python crawler to obtain charging station information on mobile phone app
 #### 3.2.1 s1_preprocessing
 ##### `transactions_processing_14.py`
 Cluster pick-up and drop-off events for taxi in 2017.4
+
+Output
+1. data/od/fod_w_14f_hs.csv: full od with 14 taxi hotspot label
+2. data/hotspot/f14p.list_of_dict: full pick-up hotspots for 14 taxi
+3. data/hotspot/f14d.list_of_dict: full drop-off hotspots for 14 taxi
 ##### `transactions_processing_17.py`
 Cluster pick-up and drop-off events for taxi in 2017.6
 #### 3.2.2 s2_mobility

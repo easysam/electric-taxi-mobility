@@ -1,88 +1,35 @@
-#coding=gbk
+import os
 import time
 import yaml
 import pandas as pd
-from datetime import datetime, timedelta
-import numpy as np
-from s1_preprocessing.hotspot.hotpots_discovery_utils import plot_points, generate_cube_index, hotspots_discovery_meanshift, \
-    hotspots_by_dbscan, generate_data_for_elki, cube_to_coordinate
 import logging
 import pickle
-import utils.data_loader as data_loader
-import utils.display as display
-import os
-
-
-def load2drop_matrix(transactions, load_clusters, drop_clusters):
-    logging.info('load2drop_matrix')
-    # Í³¼Æ×ªÒÆ¾ØÕó
-    transits = []
-    transits_time_duration = []
-    duration = timedelta(minutes=20)
-    for interval in range(int(timedelta(days=1) / duration)):
-        hour = (interval * duration) // timedelta(hours=1)
-        start_min = ((interval * duration) % timedelta(hours=1)).seconds / 60
-        end_min = ((interval * duration) % timedelta(hours=1) + duration).seconds / 60
-        logging.info('processing %d\'th interval' % interval)
-        transit = np.zeros((len(load_clusters), len(drop_clusters)))
-        transit_time_duration = np.zeros((len(load_clusters), len(drop_clusters)))
-        for i, k in enumerate(load_clusters):
-            all_trans = transactions.loc[(transactions['load_label'] == i) &
-                                         (transactions['begin_time'].dt.hour == hour) &
-                                         (transactions['begin_time'].dt.minute > start_min) &
-                                         (transactions['begin_time'].dt.minute < end_min)]
-            for j, l in enumerate(drop_clusters):
-                temp_od = all_trans.loc[(all_trans['destination_cube'].apply(lambda _cube: _cube in l['hotpots']))]
-                transit[i, j] = len(temp_od.index)
-                temp_time_duration = temp_od['end_time'] - temp_od['begin_time']
-                transit_time_duration[i, j] = temp_time_duration.dt.total_seconds().mean()
-                # print(temp_time_duration.dt.total_seconds().describe())
-            transit[i] /= len(all_trans.index)
-        transits.append(transit)
-        transits_time_duration.append(transit_time_duration)
-    return transits, transits_time_duration
-
+from utils import display, od_utils
+from s1_preprocessing.hotspot.hotpots_discovery_utils import generate_cube_index, hotspots_discovery_meanshift,\
+    cube_to_coordinate
 
 if __name__ == '__main__':
-
     # configure the working directory to the project root path
     with open("../config.yaml", "r", encoding="utf8") as f:
         conf = yaml.load(f, Loader=yaml.FullLoader)
     os.chdir(conf["project_path"])
-    ##################################################################################################################
 
     # initialization
     display.configure_pandas()
     display.configure_logging()
 
-    # ¶ÁÈ¡transactionsÊı¾İ
+    # è¯»å–transactionsæ•°æ®
     path = r'data/transaction_201407.csv'
-    transactions = pd.read_csv(path, parse_dates=['begin_time', 'end_time'], infer_datetime_format=True, low_memory=False)
+    transactions = pd.read_csv(path, parse_dates=['begin_time', 'end_time'], infer_datetime_format=True,
+                               low_memory=False)
 
-
-    #transactions = data_loader.load_od(scale='full', common=False)
-    common = data_loader.load_trajectory_od_intersection() #µç³µµÄid
-
-    # É¸Ñ¡³ö´¦ÓÚbboxÖĞµÄpoints
-    transactions['in_bbox'] = ((113.764635 < transactions['destination_log'])
-                               & (transactions['destination_log'] < 114.608972)
-                               & (22.454727 < transactions['destination_lat'])
-                               & (transactions['destination_lat'] < 22.842654)
-                               & (113.764635 < transactions['original_log'])
-                               & (transactions['original_log'] < 114.608972)
-                               & (22.454727 < transactions['original_lat'])
-                               & (transactions['original_lat'] < 22.842654))
-    filter_od = transactions.loc[transactions.in_bbox].reset_index(drop=True)
+    # filter od in bbox
+    filter_od = od_utils.filter_in_bbox(transactions)
     print('Shape of transactions that out of bbox:', transactions.shape[0] - filter_od.shape[0])
-
-    # ½«points·Öµ½cubesÀï
+    # å°†pointsåˆ†åˆ°cubesé‡Œ
     filtered_od = generate_cube_index(filter_od)
 
-    # ¾ÛÀàÇ°»æÍ¼
-    # plot_points(filtered_od, coordinates='geodetic', hour=-1)
-    # plot_points(filtered_od, coordinates='cube', hour=-1)
-
-    # ¾ÛÀà
+    # èšç±»
     logging.info('Clustering load event')
     start_time = time.time()
     load_clusters = hotspots_discovery_meanshift(filtered_od, event='load')
@@ -100,9 +47,7 @@ if __name__ == '__main__':
                           on=['Licence', 'begin_time'], how='left', indicator=True)
     print(transactions.shape, df_to_dump.shape)
 
-    df_to_dump.to_csv(
-        os.path.join(r'data/od/', 'full_od_with_hotpots_v4.csv'),
-        index=False)
+    df_to_dump.to_csv('data/od/fod_w_14f_hs.csv', index=False)
 
     # Add geodetic coordinates to hot spots
     arranged_load = [{'x': item['x'], 'y': item['y'],
@@ -120,7 +65,7 @@ if __name__ == '__main__':
                       'cube_geodetic': [cube_to_coordinate(cube, to_geodetic=True) for cube in
                                         list(set(item['hotpots']))]
                       } for item in drop_clusters]
-    # Add hot-spots id to detail info
+    # Add hotspots id to detail info
     for i in range(len(arranged_load)):
         arranged_load[i]['id'] = i
 
@@ -128,16 +73,7 @@ if __name__ == '__main__':
         arranged_drop[i]['id'] = i
 
     logging.info('Dump load and drop clusters')
-    with open('data/transit_matrix/full_load_clusters.list_of_dict_v4', 'wb') as f:
+    with open('data/hotspot/f14p.list_of_dict', 'wb') as f:
         pickle.dump(arranged_load, f)
-    with open('data/transit_matrix/full_drop_clusters.list_of_dict_v4', 'wb') as f:
+    with open('data/hotspot/f14d.list_of_dict', 'wb') as f:
         pickle.dump(arranged_drop, f)
-
-    exit(0)
-    # Í³¼Æ×ªÒÆ¾ØÕó
-    transits, transits_time_duration = load2drop_matrix(filtered_od, load_clusters, drop_clusters)
-    # ±£´æ×ªÒÆ¾ØÕó
-    with open('data/transit_matrix/l2d_v3.list_of_numpy', 'wb') as f:
-        pickle.dump(transits, f)
-    with open('data/transit_matrix/l2d_time_v3.list_of_numpy', 'wb') as f:
-        pickle.dump(transits_time_duration, f)

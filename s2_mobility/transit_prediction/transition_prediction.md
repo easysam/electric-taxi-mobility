@@ -20,9 +20,6 @@ The utility model implement can be XGBoost or MLP.
 
 #### XGBoost
 
-todo: 
-1. Validation on train set is not correct.
-2. Validation on validation set.
 #### MLP
 ### CNN
 ## Implement
