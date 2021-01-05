@@ -27,7 +27,7 @@ def generation(amount=10, df_cs=None):
     p_hs = pd.DataFrame.from_dict(p_hs)
     d_hs = pd.DataFrame.from_dict(d_hs)
 
-    with open('result/generated_data/generation_input/departure_distributions.pickle', mode='rb') as f:
+    with open('../result/generated_data/generation_input/departure_distributions.pickle', mode='rb') as f:
         departure_distributions = pickle.load(f)
 
     # Transit matrices
@@ -39,8 +39,8 @@ def generation(amount=10, df_cs=None):
         d2p = pickle.load(f)
     with open('data/transit_matrix/d2p_time_v3.list_of_df', 'rb') as f:
         d2p_t = pickle.load(f)
-    p2d_distance = pd.read_csv('result/generated_data/generation_input/p2d_distance.csv', index_col=[0, 1])['od_distance']
-    d2p_distance = pd.read_csv('result/generated_data/generation_input/d2p_distance.csv', index_col=[0, 1])[
+    p2d_distance = pd.read_csv('../result/generated_data/generation_input/p2d_distance.csv', index_col=[0, 1])['od_distance']
+    d2p_distance = pd.read_csv('../result/generated_data/generation_input/d2p_distance.csv', index_col=[0, 1])[
         'distance_before_od']
 
     wtc_model, whether_charge_scaler = data_loader.pickle_load('if_to_charge')
@@ -52,7 +52,7 @@ def generation(amount=10, df_cs=None):
     model = NN_utility_model.Net()
     model.to(device)
     # model_path = r'C:\Users\hkrep\PycharmProjects\ChargingEventsExtraction\data\preference_learning\pytorch_model\para_v2'
-    model_path = 'result/charging_behavior/where_to_charge/para_v3_30epoch.pkl'
+    model_path = '../result/charging_behavior/where_to_charge/para_v3_30epoch.pkl'
     model.load_state_dict(torch.load(model_path))
     model.eval()
     softmax = torch.nn.Softmax(dim=1)

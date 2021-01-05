@@ -1,15 +1,46 @@
 project_path: "C:\\Users\\hkrep\\PycharmProjects\\electric-taxi-mobility"
 
+od:
+  raw1407:
+    "data/od/transaction_201407.csv"
+  distance:
+    "data/od/od_with_distance_between_before.csv"
+
+hotspot:
+  14et_drop-off: "data/hotspot/full_drop_clusters.list-of_dict_v4"
+  14_pick-up: "data/hotspot/f14p.list_of_dict"
+  14_drop-off: "data/hotspot/f14d.list_of_dict"
+
 mobility:
   transition:
+    transition_cost:
+      'cube_100_200': "result/mobility/transition/transition_cost_cube_100_200.csv"
     utility_xgboost:
-      p2d_train_feature: "data/mobility/transition/utility_xgboost/p2d_train_feature.npy"
-      p2d_train_gt: "data/mobility/transition/utility_xgboost/p2d_train_gt.csv"
-      p2d_val_od: "data/mobility/transition/utility_xgboost/p2d_val_od.csv"
-      p2d_val_feature: "data/mobility/transition/utility_xgboost/p2d_val_feature.npy"
-      p2d_val_gt: "data/mobility/transition/utility_xgboost/p2d_val_gt.csv"
-      p2d_model: "result/mobility/transition/utility_xgboost/p2d_XGBRegressor.pkl"
-      p2d_scaler: "result/mobility/transition/utility_xgboost/p2d_StandardScaler.pkl"
+      p2d:
+        train_feature: "data/mobility/transition/utility_xgboost/p2d_train_feature.npy"
+        train_gt: "data/mobility/transition/utility_xgboost/p2d_train_gt.csv"
+        val_od: "data/mobility/transition/utility_xgboost/p2d_val_od.csv"
+        val_feature: "data/mobility/transition/utility_xgboost/p2d_val_feature.npy"
+        val_gt: "data/mobility/transition/utility_xgboost/p2d_val_gt.csv"
+        model: "result/mobility/transition/utility_xgboost/p2d_XGBRegressor.pkl"
+        scaler: "result/mobility/transition/utility_xgboost/p2d_StandardScaler.pkl"
+        prob_mat_incomplete: "data/mobility/transition/utility_xgboost/p2d_prob_mat.csv"
+        prob_mat: "result/mobility/transition/utility_xgboost/p2d_prob_mat.npy"
+        # To simplify transition matrix index from gird ID to range index, using a map mapping grid ID to range index.
+        prob_mat_map: "result/mobility/transition/utility_xgboost/p2d_prob_mat_map.npy"
+      d2p:
+        train_feature: "data/mobility/transition/utility_xgboost/d2p_train_feature.npy"
+        train_gt: "data/mobility/transition/utility_xgboost/d2p_train_gt.csv"
+        val_od: "data/mobility/transition/utility_xgboost/d2p_val_od.csv"
+        val_feature: "data/mobility/transition/utility_xgboost/d2p_val_feature.npy"
+        val_gt: "data/mobility/transition/utility_xgboost/d2p_val_gt.csv"
+        model: "result/mobility/transition/utility_xgboost/d2p_XGBRegressor.pkl"
+        scaler: "result/mobility/transition/utility_xgboost/d2p_StandardScaler.pkl"
+        prob_mat_incomplete: "data/mobility/transition/utility_xgboost/d2p_prob_mat.csv"
+        prob_mat: "result/mobility/transition/utility_xgboost/d2p_prob_mat.npy"
+        # To simplify transition matrix index from gird ID to range index, using a map mapping grid ID to range index.
+        prob_mat_map: "result/mobility/transition/utility_xgboost/d2p_prob_mat_map.npy"
+
   charge:
     whether_feature_label: "data/mobility/charge/whether/od_with_traveled_v7.csv"
     where_feature: "data/mobility/charge/where/where_charge_feature.csv"

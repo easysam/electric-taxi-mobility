@@ -138,10 +138,8 @@ def to_integer_cube(original_x, original_y, original='geodetic'):
 
 
 # If to_geodetic is True, then return center geodetic coordinates
-def cube_to_coordinate(cube, to_geodetic=False):
+def cube_to_coordinate(cube, to_geodetic=False, m=400, n=800):
     # geodetic coordinates to cube index
-    m = 400
-    n = 800
     y = cube // n
     x = cube % n
     if to_geodetic:

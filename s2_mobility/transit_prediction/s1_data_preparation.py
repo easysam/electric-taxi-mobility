@@ -1,6 +1,7 @@
 # 1. extract feature and ground truth; 2. split the data set.
 import os
 import yaml
+import argparse
 import numpy as np
 import pandas as pd
 from datetime import datetime
@@ -74,10 +75,34 @@ def feature_extraction(_od, _cs, _neighbor_num=3):
                            arr_capacity_around_dest[:, :_neighbor_num]), axis=1)
 
 
+def make_d2p_od(raw_od_file, threshold=3600):
+    cols = raw_od_file.columns.tolist()
+    _a, _b, _c, _d, _e, _f = (cols.index('original_lat'), cols.index('destination_lat'),
+                              cols.index('original_log'), cols.index('destination_log'),
+                              cols.index('begin_time'), cols.index('end_time'))
+    cols[_a], cols[_b], cols[_c], cols[_d], cols[_e], cols[_f] = \
+        cols[_b], cols[_a], cols[_d], cols[_c], cols[_f], cols[_e]
+    raw_od_file = raw_od_file[cols]
+    cols[_a], cols[_b], cols[_c], cols[_d], cols[_e], cols[_f] = \
+        cols[_b], cols[_a], cols[_d], cols[_c], cols[_f], cols[_e]
+    raw_od_file.columns = cols
+    end_cols = ['destination_lat', 'destination_log', 'end_time']
+    raw_od_file[end_cols] = raw_od_file[end_cols].shift(-1)
+    raw_od_file.loc[raw_od_file['Licence'] != raw_od_file['Licence'].shift(-1), end_cols] = None
+    raw_od_file = raw_od_file.loc[(raw_od_file['end_time'] - raw_od_file['begin_time']).dt.total_seconds() < threshold]
+    return raw_od_file
+
+
 if __name__ == '__main__':
     display.configure_logging()
     display.configure_pandas()
 
+    parser = argparse.ArgumentParser(description='Transition Prediction Data Preparation')
+    parser.add_argument('--task', type=str, default='p2d', choices=['p2d', 'd2p'])
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--hotspot', action='store_true')
+    group.add_argument('--grid', action='store_true')
+    args = parser.parse_args()
     # configure the working directory to the project root path
     with open("../../config.yaml", "r", encoding="utf8") as f:
         conf = yaml.load(f, Loader=yaml.FullLoader)
@@ -90,8 +115,13 @@ if __name__ == '__main__':
     # ################### p2d train ########################
     # Load all transactions
     df_train_od = data_loader.load_od(scale='full', common=False)
+    # Load additional distance information.
+    df_train_od_with_dis = data_loader.load_od(with_distance=True)
     # Load ET transactions
     df_train_et_od = data_loader.load_od(scale='full', common=True)
+    if 'd2p' == args.task:
+        df_train_od = make_d2p_od(df_train_od)
+        df_train_et_od = make_d2p_od(df_train_et_od)
     # Load CS (charging station) information.
     df_train_cs, _ = data_loader.load_cs(scale='part', date=datetime(2014, 7, 1))
     df_train_cs = df_train_cs.loc[~df_train_cs['cs_name'].isin(['LJDL', 'E04', 'BN0002', 'F11', 'S1', 'S2',
@@ -128,8 +158,8 @@ if __name__ == '__main__':
                           on=['original_cube', 'destination_cube'], how="left").fillna(0)
 
     # ################### Save to local ########################
-    np.save(conf["mobility"]["transition"]["utility_xgboost"]["p2d_train_feature"], p2d_train_feature)
-    df_train_demands.to_csv(conf["mobility"]["transition"]["utility_xgboost"]["p2d_train_gt"], index=False)
-    train_fuel_unique_od.to_csv(conf["mobility"]["transition"]["utility_xgboost"]["p2d_val_od"], index=False)
-    np.save(conf["mobility"]["transition"]["utility_xgboost"]["p2d_val_feature"], p2d_val_feature)
-    p2d_val_gt.to_csv(conf["mobility"]["transition"]["utility_xgboost"]["p2d_val_gt"], index=False)
+    np.save(conf["mobility"]["transition"]["utility_xgboost"][args.task]["train_feature"], p2d_train_feature)
+    df_train_demands.to_csv(conf["mobility"]["transition"]["utility_xgboost"][args.task]["train_gt"], index=False)
+    train_fuel_unique_od.to_csv(conf["mobility"]["transition"]["utility_xgboost"][args.task]["val_od"], index=False)
+    np.save(conf["mobility"]["transition"]["utility_xgboost"][args.task]["val_feature"], p2d_val_feature)
+    p2d_val_gt.to_csv(conf["mobility"]["transition"]["utility_xgboost"][args.task]["val_gt"], index=False)

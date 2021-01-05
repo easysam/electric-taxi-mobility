@@ -1,5 +1,6 @@
 import os
 import yaml
+import argparse
 import pickle
 import random
 import xgboost
@@ -42,6 +43,9 @@ if __name__ == '__main__':
     display.configure_logging()
     display.configure_pandas()
 
+    parser = argparse.ArgumentParser(description='Transition Prediction Utility (XGBoost) Train')
+    parser.add_argument('--task', type=str, default='p2d', choices=['p2d', 'd2p'])
+    args = parser.parse_args()
     # configure the working directory to the project root path
     with open("../../config.yaml", "r", encoding="utf8") as f:
         conf = yaml.load(f, Loader=yaml.FullLoader)
@@ -50,8 +54,8 @@ if __name__ == '__main__':
     # random.seed(10)
     split_by_o_flag = False
 
-    p2d_x = np.load(conf["mobility"]["transition"]["utility_xgboost"]["p2d_train_feature"])
-    p2d_gt = pd.read_csv(conf["mobility"]["transition"]["utility_xgboost"]["p2d_train_gt"])
+    p2d_x = np.load(conf["mobility"]["transition"]["utility_xgboost"][args.task]["train_feature"])
+    p2d_gt = pd.read_csv(conf["mobility"]["transition"]["utility_xgboost"][args.task]["train_gt"])
 
     if split_by_o_flag:
         p2d_train_x, _p2d_train_y, p2d_val_x, _p2d_val_y = split_by_o(p2d_x, p2d_gt, ratio=0.2)
@@ -85,7 +89,7 @@ if __name__ == '__main__':
     print("Kullback–Leibler divergence: {:.4f}".format(kl.mean()))
 
     # Save fitted XGBRegressor model and StandardScaler to local.
-    with open(conf["mobility"]["transition"]["utility_xgboost"]["p2d_model"], 'wb') as f:
+    with open(conf["mobility"]["transition"]["utility_xgboost"][args.task]["model"], 'wb') as f:
         pickle.dump(xgbr, f)
-    with open(conf["mobility"]["transition"]["utility_xgboost"]["p2d_scaler"], 'wb') as f:
+    with open(conf["mobility"]["transition"]["utility_xgboost"][args.task]["scaler"], 'wb') as f:
         pickle.dump(scaler, f)
