@@ -8,7 +8,6 @@ from datetime import datetime
 from sklearn.metrics import pairwise
 from utils import data_loader, display, vector_haversine_distances as vec_hs_dis, od_utils
 from s1_preprocessing.hotspot.hotpots_discovery_utils import generate_cube_index
-from s2_mobility.transition import count_transits
 
 
 def extract_transition_demand(_df_od, _m=100, _n=200, threshold=10):

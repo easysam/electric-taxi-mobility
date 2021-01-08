@@ -1,5 +1,5 @@
-# electric-taxi-mobility
-Modeling the mobility of electric taxi.
+# E<sup>2</sup>M: Evolving Electric Taxi Mobility
+Modeling the evolving mobility of electric taxi.
 
 ## 1. Getting Start
 ### 1.1 Dependency
@@ -65,5 +65,7 @@ Output
 3. data/hotspot/f14d.list_of_dict: full drop-off hotspots for 14 taxi
 ##### `transactions_processing_17.py`
 Cluster pick-up and drop-off events for taxi in 2017.6
+##### `s1_preprocessing/trajectory_segmentation/s1_trajectory_info_complement.py`
+![img_1.png](img_1.png)
 #### 3.2.2 s2_mobility
 #### 3.2.3 s3_generation
