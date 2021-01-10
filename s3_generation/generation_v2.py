@@ -15,10 +15,10 @@ if __name__ == '__main__':
     with open("config.yaml", "r", encoding="utf8") as f:
         conf = yaml.load(f, Loader=yaml.FullLoader)
     os.chdir(conf["project_path"])
-
+    # Key parameter: ET number and charger distribution
     n = 10000
     cs = pd.read_csv(conf['cs']['val'], usecols=['lng', 'lat', 'chg_points'])
-    w = {idx: np.zeros(v) for idx, v in enumerate(cs['chg_points'].to_list())}
+    # Mobility pattern
     p2d_prob = np.load(conf['mobility']['transition']['utility_xgboost']['p2d']['prob_mat'])
     p2d_dis = np.load(conf['mobility']['transition']['p2d']['distance'])
     p2d_dur = np.load(conf['mobility']['transition']['p2d']['duration'])
@@ -27,4 +27,6 @@ if __name__ == '__main__':
     d2p_dur = np.load(conf['mobility']['transition']['d2p']['duration'])
     with open(conf['mobility']['transition']['idx_cube_100_200_map'], mode='rb') as f:
         idx_map = pickle.load(f)
+    # Initial variable
     init_l = np.random.randint(0, high=len(idx_map['d2p_d']), size=(n,))
+    w = {idx: np.zeros(v) for idx, v in enumerate(cs['chg_points'].to_list())}
