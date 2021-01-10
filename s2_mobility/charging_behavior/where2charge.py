@@ -107,13 +107,13 @@ if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model.to(device)
     criterion = torch.nn.MSELoss(reduction='mean')
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.5)
 
     # Save a time stamp
     print("Start training...")
     since = time.time()
     loss_value = []
-    total_epoch = 30
+    total_epoch = 100
     min_running_loss = 100
     for epoch in range(0, total_epoch):
         running_loss = 0.0
