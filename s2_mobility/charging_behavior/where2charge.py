@@ -31,9 +31,9 @@ class ChargingEventDataset(Dataset):
         return data.float(), label.float()
 
 
-class Net(torch.nn.Module):
+class Where2Charge(torch.nn.Module):
     def __init__(self):
-        super(Net, self).__init__()
+        super(Where2Charge, self).__init__()
         self.l1 = torch.nn.Linear(9, 16)   # change
         self.l2 = torch.nn.Linear(16, 32)
         self.l3 = torch.nn.Linear(32, 16)
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     #     if i_batch == 3:
     #         break
 
-    model = Net()
+    model = Where2Charge()
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model.to(device)
     criterion = torch.nn.MSELoss(reduction='mean')

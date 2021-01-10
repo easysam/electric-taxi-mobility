@@ -5,7 +5,7 @@ Modeling the evolving mobility of electric taxi.
 ### 1.1 Dependency
 The project uses `Python>=3.7`
 
-You need install following python package: `pandas`, `numpy`, `sklearn`, `xgboost`, `pyyaml`.
+You need install following python package: `pyyaml`, `pandas`, `numpy`, `sklearn`, `xgboost`, `pytorch`.
 ### 1.2 Usage
 Preliminary: you need set the "project_path" in "config.yaml" as project root path.
 #### 1.2.1 Mobility Modeling & Data Generation
@@ -66,6 +66,6 @@ Output
 ##### `transactions_processing_17.py`
 Cluster pick-up and drop-off events for taxi in 2017.6
 ##### `s1_preprocessing/trajectory_segmentation/s1_trajectory_info_complement.py`
-![img_1.png](img_1.png)
+![img_1.png](img/img_1.png)
 #### 3.2.2 s2_mobility
 #### 3.2.3 s3_generation
