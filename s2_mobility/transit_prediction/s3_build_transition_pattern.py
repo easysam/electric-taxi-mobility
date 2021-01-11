@@ -116,6 +116,6 @@ if __name__ == '__main__':
     np.save(conf['mobility']['transition']['p2d']['distance'], p2d_dis.to_numpy())
     np.save(conf['mobility']['transition']['p2d']['duration'], p2d_duration.to_numpy())
 
-    np.save(conf['mobility']['transition']['utility_xgboost']['d2p']['prob_mat'], p2d_prob_mat.to_numpy())
+    np.save(conf['mobility']['transition']['utility_xgboost']['d2p']['prob_mat'], d2p_prob_mat.to_numpy())
     np.save(conf['mobility']['transition']['d2p']['distance'], d2p_dis.to_numpy())
     np.save(conf['mobility']['transition']['d2p']['duration'], d2p_duration.to_numpy())

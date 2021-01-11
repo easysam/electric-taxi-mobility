@@ -60,3 +60,5 @@ mobility:
     where_label: "data/mobility/charge/where/all_formatted_annotation_distribution_v3.csv"
     where_model: "result/mobility/charge/where/mlp"
   resting: "result/mobility/resting.pkl"
+generation:
+  schedule: "result/generation/schedule.pkl"
