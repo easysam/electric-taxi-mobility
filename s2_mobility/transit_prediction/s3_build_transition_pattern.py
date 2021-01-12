@@ -110,8 +110,15 @@ if __name__ == '__main__':
                'd2p_d': {_k: _v for _k, _v in enumerate(d2p_prob_mat.index.tolist())},
                'd2p_p': {_k: _v for _k, _v in enumerate(d2p_prob_mat.columns.astype(dtype=int).tolist())}}
 
+    idx_inverse_map = {'p2d_p': {_v: _k for _k, _v in enumerate(p2d_prob_mat.index.tolist())},
+                       'p2d_d': {_v: _k for _k, _v in enumerate(p2d_prob_mat.columns.astype(dtype=int).tolist())},
+                       'd2p_d': {_v: _k for _k, _v in enumerate(d2p_prob_mat.index.tolist())},
+                       'd2p_p': {_v: _k for _k, _v in enumerate(d2p_prob_mat.columns.astype(dtype=int).tolist())}}
+
     with open(conf['mobility']['transition']['idx_cube_100_200_map'], mode='wb') as f:
         pickle.dump(idx_map, f)
+    with open(conf['mobility']['transition']['idx_cube_100_200_inverse_map'], mode='wb') as f:
+        pickle.dump(idx_inverse_map, f)
     np.save(conf['mobility']['transition']['utility_xgboost']['p2d']['prob_mat'], p2d_prob_mat.to_numpy())
     np.save(conf['mobility']['transition']['p2d']['distance'], p2d_dis.to_numpy())
     np.save(conf['mobility']['transition']['p2d']['duration'], p2d_duration.to_numpy())

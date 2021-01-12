@@ -23,6 +23,7 @@ mobility:
       'cube_100_200': "result/mobility/transition/transition_cost_cube_100_200.csv"
     # To simplify transition matrix index from gird ID to range index, using a map mapping grid ID to range index.
     idx_cube_100_200_map: "result/mobility/transition/idx_cube_100_200_map.pkl"
+    idx_cube_100_200_inverse_map: "result/mobility/transition/idx_cube_100_200_inverse_map.pkl"
     p2d:
       distance: "result/mobility/transition/p2d_distance.npy"
       duration: "result/mobility/transition/p2d_duration.npy"
@@ -62,3 +63,4 @@ mobility:
   resting: "result/mobility/resting.pkl"
 generation:
   schedule: "result/generation/schedule.pkl"
+  result: "result/generation/generated_trajectories.csv"
