@@ -16,7 +16,7 @@ if __name__ == '__main__':
     _14_et = _od.pivot(index='original_cube', columns='destination_cube', values='demand_14_et').fillna(0)
     _14_all = _od.pivot(index='original_cube', columns='destination_cube', values='demand_all').fillna(0)
 
-    _od = normalize(_od, norm='l1')
+    _17_et_pred = normalize(_17_et_pred, norm='l1')
     _17_et_gt = normalize(_17_et_gt, norm='l1')
     _14_et = normalize(_14_et, norm='l1')
     _14_all = normalize(_14_all, norm='l1')
