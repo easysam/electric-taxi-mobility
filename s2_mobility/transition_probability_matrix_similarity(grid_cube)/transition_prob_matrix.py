@@ -2,10 +2,27 @@ import os
 import yaml
 import pandas as pd
 from sklearn.preprocessing import normalize
+from scipy.stats import pearsonr
+import numpy as np
+def coeff(df,df_part):
+    # Calculated correlation coefficient
+    s = []
+    s2 = []
+    for i in range(0, 1):
+        a = df.flatten()
+        al = a.tolist()
+        s = s + al
+
+        b = df_part.flatten()
+        bl = b.tolist()
+        s2 = s2 + bl
+
+    pccs = pearsonr(np.array(s), np.array(s2))
+    return pccs[0]
 
 if __name__ == '__main__':
     # configure the working directory to the project root path
-    with open("../../config.yaml", "r", encoding="utf8") as f:
+    with open("../config.yaml", "r", encoding="utf8") as f:
         conf = yaml.load(f, Loader=yaml.FullLoader)
     os.chdir(conf["project_path"])
 
@@ -20,6 +37,13 @@ if __name__ == '__main__':
     _17_et_gt = normalize(_17_et_gt, norm='l1')
     _14_et = normalize(_14_et, norm='l1')
     _14_all = normalize(_14_all, norm='l1')
+
+    print(coeff(_17_et_pred,_17_et_gt))
+    print(coeff(_14_et, _17_et_gt))
+    print(coeff(_14_all, _17_et_gt))
+    print(coeff(_14_all,_17_et_pred))
+
+
 
     print("shape of 14 et mat: ", _14_et.shape)
     print("shape of 14 all taxis mat: ", _14_all.shape)
