@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import normalize
 from scipy.stats import pearsonr
-<<<<<<< HEAD
 import numpy as np
 def coeff(df,df_part):
     # Calculated correlation coefficient
@@ -21,9 +20,7 @@ def coeff(df,df_part):
 
     pccs = pearsonr(np.array(s), np.array(s2))
     return pccs[0]
-=======
 from s2_mobility.transit_prediction.s2_utility_XGBoost_train import kl
->>>>>>> 1878458f6a4f14e382865c5986c014cd758f83d8
 
 if __name__ == '__main__':
     # configure the working directory to the project root path

@@ -7,8 +7,8 @@ import torch
 import numpy as np
 import pandas as pd
 import xgboost as xgb
-from tqdm import tqdm, trange
 from datetime import datetime, timedelta
+from tqdm import tqdm
 from sklearn.preprocessing import normalize
 from sklearn.metrics.pairwise import haversine_distances
 
@@ -61,7 +61,7 @@ def single_period_generation(_id, ts, _loc, _r, _traveled=0):
     while True:
         if 'empty' == state:
             # Determine whether to charge
-            _lng, _lat = cube_to_coordinate(idx_map['d2p_d'][_loc])
+            _lng, _lat = cube_to_coordinate(idx_map['d2p_d'][_loc], to_geodetic=True, m=100, n=200)
             ts_datetime = init_t + timedelta(seconds=ts)
             time_of_day = ts_datetime.hour + ts_datetime.minute / 60 + ts_datetime.second / 3600
             dis_to_cs = haversine_distances(np.radians([[_lat, _lng]]), np.radians(cs_loc)) * EARTH_RADIUS
@@ -135,12 +135,15 @@ if __name__ == '__main__':
     os.chdir(conf["project_path"])
     display.configure_logging()
     parser = argparse.ArgumentParser()
+    parser.add_argument('--n', type=int, default=10)
+    parser.add_argument('--day', type=int, default=7)
     parser.add_argument('--local_schedule', action='store_true')
     args = parser.parse_args()
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     EARTH_RADIUS = 6371.0088
     # Key parameter: ET number and charger distribution
-    n = 100
+    n = args.n
+    day = args.day
     cs = pd.read_csv(conf['cs']['val'], usecols=['lng', 'lat', 'chg_points'])
     cs_loc = cs[['lat', 'lng']].to_numpy()
     # Mobility pattern
@@ -180,13 +183,7 @@ if __name__ == '__main__':
     # Initial variable
     init_t = datetime(2017, 6, 1, 0, 0, 0)
     init_l = np.random.randint(0, high=len(idx_map['d2p_d']), size=(n,))
-    if args.local_schedule:
-        with open(conf['generation']['schedule'], 'rb') as f:
-            resting_schedule = pickle.load(f)
-    else:
-        resting_schedule = build_rest_schedule(n, rest_pattern)
-        with open(conf['generation']['schedule'], 'wb') as f:
-            pickle.dump(resting_schedule, f)
+    resting_schedule = build_rest_schedule(n, rest_pattern, _days=day)
     w = {idx: np.zeros(v) for idx, v in enumerate(cs['chg_points'].to_list())}
     trajectories = [None for _ in range(n)]
     t = [None for _ in range(n)]
@@ -201,10 +198,10 @@ if __name__ == '__main__':
     t_previous = 0
     while True:
         i = np.argmin(t).item()
-        if t[i] > 3 * 24 * 60 * 60:
+        if t[i] > day * 24 * 60 * 60:
             break
         else:
-            print("\rGeneration progress: {:.1f}%".format(t[i] / (3 * 24 * 60 * 60) * 100), end='')
+            print("\rGeneration progress: {:.1f}%".format(t[i] / (day * 24 * 60 * 60) * 100), end='')
         for station in w:
             w[station] = np.max((w[station] - (t[i] - t_previous)).reshape(-1, 1), axis=-1, initial=0).reshape(-1)
         t_previous = t[i]
