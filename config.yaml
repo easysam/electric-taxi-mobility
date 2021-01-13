@@ -15,7 +15,7 @@ hotspot:
   14_drop-off: "data/hotspot/f14d.list_of_dict"
 
 cs:
-  val: "data/charging_station/ChargeLocation201706_wgs84.csv"
+  val: "result/charging_station/ChargeLocation201706_wgs84.csv"
 
 mobility:
   transition:
