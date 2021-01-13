@@ -7,7 +7,7 @@ import torch
 import numpy as np
 import pandas as pd
 import xgboost as xgb
-from tqdm import tqdm
+from tqdm import tqdm, trange
 from datetime import datetime, timedelta
 from sklearn.preprocessing import normalize
 from sklearn.metrics.pairwise import haversine_distances
@@ -43,15 +43,21 @@ def build_rest_schedule(_n=10000, _pattern=None, _days=7):
         for _day in range(_days):
             _time = times_schedule[_i, _day]
             for _j in range(_time):
-                _schedule[_i].append(_days * 24 * 60 + _t[_time - 1][_t_i[_time - 1]] + _j * _frac[_time - 1])
+                _schedule[_i].append(_day * 24 * 60 + _t[_time - 1][_t_i[_time - 1]] + _j * _frac[_time - 1])
             _t_i[_time - 1] += 1
         _schedule[_i] = [_x * 60 for _x in _schedule[_i]]
     return _schedule
 
 
-def single_period_generation(_id, ts, _loc, _r, traveled=0):
+def cube_convert(_id, _from, _to):
+    # idx_map idx_inv_map
+    _temp = idx_map[_from][_id]
+    return idx_inv_map[_to][_temp]
+
+
+def single_period_generation(_id, ts, _loc, _r, _traveled=0):
     state = 'empty'
-    _trajectory = pd.DataFrame(columns=['event', 'timestamp', 'location', 'traveled', 'info1', 'info2'])
+    _trajectory = pd.DataFrame(columns=['event', 'timestamp', 'location', 'traveled', 'station', 'queuing', 'charging'])
     while True:
         if 'empty' == state:
             # Determine whether to charge
@@ -60,18 +66,18 @@ def single_period_generation(_id, ts, _loc, _r, traveled=0):
             time_of_day = ts_datetime.hour + ts_datetime.minute / 60 + ts_datetime.second / 3600
             dis_to_cs = haversine_distances(np.radians([[_lat, _lng]]), np.radians(cs_loc)) * EARTH_RADIUS
             whether2charge_f = [time_of_day, dis_to_cs.min(), dis_to_cs.max(), dis_to_cs.mean(), np.median(dis_to_cs),
-                                traveled]
+                                _traveled / 1000]
             whether2charge_f_scaled = whether2charge_scaler.transform(np.reshape(whether2charge_f, (1, -1)))
-            to_charge = whether2charge.predict(whether2charge_f_scaled)
-            if (to_charge & (traveled < 50)) | (~to_charge & (traveled > 200)):
-                to_charge = ~to_charge
+            to_charge = whether2charge.predict(whether2charge_f_scaled).item()
+            if (to_charge & (_traveled / 1000 < 150)) | (~to_charge & (_traveled / 1000 > 200)):
+                to_charge = 1 - to_charge
             if to_charge:
                 where2charge_f = pd.DataFrame(index=range(len(cs)))
                 where2charge_f['max_dis'] = dis_to_cs.max()
                 where2charge_f['mean_dis'] = dis_to_cs.mean()
                 where2charge_f['mid_dis'] = np.median(dis_to_cs)
                 where2charge_f['min_dis'] = dis_to_cs.min()
-                where2charge_f['traveled'] = traveled
+                where2charge_f['traveled'] = _traveled
                 where2charge_f['distance'] = dis_to_cs.reshape((-1,))
                 where2charge_f['weekday'] = 1 if ts_datetime.weekday() < 5 else 0
                 where2charge_f['time_of_day'] = time_of_day
@@ -84,37 +90,42 @@ def single_period_generation(_id, ts, _loc, _r, traveled=0):
                 state = 'charging'
                 continue
             # Determine whether to rest
-            if ts > resting_schedule[_id][_r]:
-                state = 'resting'
+            if len(resting_schedule[_id]) < _r:
+                if ts > resting_schedule[_id][_r]:
+                    state = 'resting'
                 continue
             # Move on to the occupied stated
             _loc_prev = _loc
-            _loc = np.random.choice(np.arange(len(idx_map['d2p_p'])), size=1, p=d2p_prob[_loc_prev])
-            ts += d2p_dur[_loc_prev][_loc]
-            traveled += d2p_dis[_loc_prev][_loc]
-            _trajectory.loc[len(_trajectory)] = ['pick-up', ts_datetime, idx_map['d2p_d'][_loc], traveled]
+            _loc = np.random.choice(np.arange(len(idx_map['d2p_p'])), size=1, p=d2p_prob[_loc_prev]).item()
+            ts += 10 * (d2p_dur[_loc_prev][_loc] if d2p_dur[_loc_prev][_loc] != 0 else 20)
+            _traveled += 10 * (d2p_dis[_loc_prev][_loc] if d2p_dis[_loc_prev][_loc] != 0 else 250)
+            _trajectory.loc[len(_trajectory)] = ['pick-up', ts_datetime, idx_map['d2p_p'][_loc], _traveled, None, None,
+                                                 None]
             state = 'occupied'
-            break
+            _loc = cube_convert(_loc, 'd2p_p', 'p2d_p')
+            continue
         elif 'occupied' == state:
             ts_datetime = init_t + timedelta(seconds=ts)
             _loc_prev = _loc
-            _loc = np.random.choice(np.arange(len(idx_map['p2d_d'])), size=1, p=p2d_prob[_loc_prev])
-            ts += p2d_dur[_loc_prev][_loc]
-            traveled += d2p_dis[_loc_prev][_loc]
-            _trajectory.loc[len(_trajectory)] = ['pick-up', ts_datetime, idx_map['d2p_d'][_loc], traveled]
+            _loc = np.random.choice(np.arange(len(idx_map['p2d_d'])), size=1, p=p2d_prob[_loc_prev]).item()
+            ts += p2d_dur[_loc_prev][_loc] if p2d_dur[_loc_prev][_loc] != 0 else 20
+            _traveled += d2p_dis[_loc_prev][_loc] if d2p_dis[_loc_prev][_loc] != 0 else 250
+            _trajectory.loc[len(_trajectory)] = ['drop-off', ts_datetime, idx_map['p2d_d'][_loc], _traveled, None, None,
+                                                 None]
             state = 'empty'
-            break
+            _loc = cube_convert(_loc, 'p2d_d', 'd2p_d')
+            continue
         elif 'resting' == state:
             ts_datetime = init_t + timedelta(seconds=ts)
-            ts += rest_pattern['duration'][ts_datetime.hour]
+            ts += rest_pattern['duration'][ts_datetime.hour] if rest_pattern['duration'][ts_datetime.hour] != 0 else 20
             _r += 1
-            _trajectory.loc[len(_trajectory)] = ['resting', ts_datetime, idx_map['d2p_d'][_loc], traveled,
-                                                 rest_pattern['duration'][ts_datetime.hour]]
+            _trajectory.loc[len(_trajectory)] = ['resting', ts_datetime, idx_map['d2p_d'][_loc], _traveled,
+                                                 rest_pattern['duration'][ts_datetime.hour], None, None]
             state = 'empty'
-            break
+            continue
         elif 'charging' == state:
-            _c = 120 * 60 * traveled / (250 * 1000)
-            return _trajectory, ts, _loc, station_idx, _c, _r
+            _c = 120 * 60 * _traveled / (250 * 1000)
+            return _trajectory, ts, _loc, station_idx, _traveled, _c, _r
 
 
 if __name__ == '__main__':
@@ -129,7 +140,7 @@ if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     EARTH_RADIUS = 6371.0088
     # Key parameter: ET number and charger distribution
-    n = 10000
+    n = 100
     cs = pd.read_csv(conf['cs']['val'], usecols=['lng', 'lat', 'chg_points'])
     cs_loc = cs[['lat', 'lng']].to_numpy()
     # Mobility pattern
@@ -142,6 +153,8 @@ if __name__ == '__main__':
     d2p_dur = np.load(conf['mobility']['transition']['d2p']['duration'])
     with open(conf['mobility']['transition']['idx_cube_100_200_map'], mode='rb') as f:
         idx_map = pickle.load(f)
+    with open(conf['mobility']['transition']['idx_cube_100_200_inverse_map'], mode='rb') as f:
+        idx_inv_map = pickle.load(f)
     # 2. charging pattern
     whether2charge = xgb.XGBClassifier(verbosity=1, max_depth=10, learning_rate=0.01, n_estimators=500,
                                        scale_pos_weight=10)
@@ -175,7 +188,33 @@ if __name__ == '__main__':
         with open(conf['generation']['schedule'], 'wb') as f:
             pickle.dump(resting_schedule, f)
     w = {idx: np.zeros(v) for idx, v in enumerate(cs['chg_points'].to_list())}
-    t = [0] * n
-    r = [0] * n
+    trajectories = [None for _ in range(n)]
+    t = [None for _ in range(n)]
+    r = [None for _ in range(n)]
+    loc = [None for _ in range(n)]
+    s = [None for _ in range(n)]
+    c = [None for _ in range(n)]
+    traveled = [None for _ in range(n)]
     for i in tqdm(range(n)):
-        single_period_generation(i, 0, init_l[i], 0)
+        # _trajectory, ts, _loc, station_idx, _c, _r
+        trajectories[i], t[i], loc[i], s[i], traveled[i], c[i], r[i] = single_period_generation(i, 0, init_l[i], 0)
+    t_previous = 0
+    while True:
+        i = np.argmin(t).item()
+        if t[i] > 3 * 24 * 60 * 60:
+            break
+        else:
+            print("\rGeneration progress: {:.1f}%".format(t[i] / (3 * 24 * 60 * 60) * 100), end='')
+        for station in w:
+            w[station] = np.max((w[station] - (t[i] - t_previous)).reshape(-1, 1), axis=-1, initial=0).reshape(-1)
+        t_previous = t[i]
+        k = np.argmin(w[s[i]]).item()
+        q = w[s[i]][k]
+        w[s[i]][k] += c[i]
+        trajectories[i].loc[len(trajectories[i])] = ['charging', init_t + timedelta(seconds=t[i]),
+                                                     idx_map['d2p_d'][loc[i]], traveled[i], s[i], q, c[i]]
+        sub_trajectories, t[i], loc[i], s[i], traveled[i], c[i], r[i] = single_period_generation(i, t[i] + q + c[i],
+                                                                                                 init_l[i], r[i])
+        trajectories[i] = pd.concat([trajectories[i], sub_trajectories])
+    pd.concat(trajectories, keys=np.arange(n), names=['id', 'foo']).droplevel('foo').to_csv(
+        conf['generation']['result'])
