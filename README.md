@@ -9,7 +9,7 @@ Modeling the evolving mobility of electric taxi.
 The project uses `Python>=3.7`
 
 You need install following python package: `pyyaml`, `pandas`, `numpy`, `sklearn`, `xgboost`, `pytorch`, `tqdm`
-, `matplotlib`.
+, `matplotlib`, `dask`.
 
 ### 1.2 Usage
 

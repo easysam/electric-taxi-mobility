@@ -77,7 +77,7 @@ def single_period_generation(_id, ts, _loc, _r, _traveled=0):
                 where2charge_f['mean_dis'] = dis_to_cs.mean()
                 where2charge_f['mid_dis'] = np.median(dis_to_cs)
                 where2charge_f['min_dis'] = dis_to_cs.min()
-                where2charge_f['traveled'] = _traveled
+                where2charge_f['traveled'] = _traveled / 1000
                 where2charge_f['distance'] = dis_to_cs.reshape((-1,))
                 where2charge_f['weekday'] = 1 if ts_datetime.weekday() < 5 else 0
                 where2charge_f['time_of_day'] = time_of_day
@@ -85,7 +85,9 @@ def single_period_generation(_id, ts, _loc, _r, _traveled=0):
                 data = torch.from_numpy(where2charge_f.to_numpy()).to(device).float()
                 data = data.view(-1, len(cs.index), len(where2charge_f.columns))
                 output = where2charge(data)
-                output = softmax(output).view(-1).cpu().detach().numpy()
+                # output = softmax(output).view(-1).cpu().detach().numpy()
+                output = output.view(-1).cpu().detach().numpy()
+                output = normalize(output.reshape(1, -1), norm='l1').reshape(-1)
                 station_idx = np.random.choice(len(output), 1, p=output).item()
                 state = 'charging'
                 continue
@@ -98,7 +100,7 @@ def single_period_generation(_id, ts, _loc, _r, _traveled=0):
             _loc_prev = _loc
             _loc = np.random.choice(np.arange(len(idx_map['d2p_p'])), size=1, p=d2p_prob[_loc_prev]).item()
             ts += 10 * (d2p_dur[_loc_prev][_loc] if d2p_dur[_loc_prev][_loc] != 0 else 20)
-            _traveled += 10 * (d2p_dis[_loc_prev][_loc] if d2p_dis[_loc_prev][_loc] != 0 else 250)
+            _traveled += 2 * (d2p_dis[_loc_prev][_loc] if d2p_dis[_loc_prev][_loc] != 0 else 250)
             _trajectory.loc[len(_trajectory)] = ['pick-up', ts_datetime, idx_map['d2p_p'][_loc], _traveled, None, None,
                                                  None]
             state = 'occupied'
@@ -213,5 +215,5 @@ if __name__ == '__main__':
         sub_trajectories, t[i], loc[i], s[i], traveled[i], c[i], r[i] = single_period_generation(i, t[i] + q + c[i],
                                                                                                  init_l[i], r[i])
         trajectories[i] = pd.concat([trajectories[i], sub_trajectories])
-    pd.concat(trajectories, keys=np.arange(n), names=['id', 'foo']).droplevel('foo').to_csv(
+    pd.concat(trajectories, keys=np.arange(n), names=['id', 'foo']).droplevel('foo').to_parquet(
         conf['generation']['result'])

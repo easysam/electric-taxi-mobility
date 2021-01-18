@@ -4,7 +4,7 @@ import yaml
 import argparse
 import numpy as np
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from sklearn.metrics import pairwise
 from utils import data_loader, display, vector_haversine_distances as vec_hs_dis, od_utils
 from s1_preprocessing.hotspot.hotpots_discovery_utils import generate_cube_index
@@ -27,7 +27,7 @@ def build_composite_demands(_demand, _et_demand):
     return _df_demands
 
 
-def build_final_transitions(_df_od, _df_demands, _m=100, _n=200):
+def transitions_spatial_temporal_info_completion(_df_od, _df_demands, _m=100, _n=200):
     _df_od['duration'] = (_df_od['end_time'] - _df_od['begin_time']).dt.total_seconds()
     _df_od = generate_cube_index(_df_od, m=_m, n=_n)
     _df_od = _df_od[['original_cube', 'destination_cube', 'original_log', 'original_lat', 'destination_log',
@@ -92,12 +92,22 @@ def make_d2p_od(raw_od_file, threshold=3600):
     return raw_od_file
 
 
+def select_window_od(_od, _windows_len, _window_idx, time_col='begin_time'):
+    hour = (_window_idx * _windows_len) // timedelta(hours=1)
+    s_min = ((_window_idx * _windows_len) % timedelta(hours=1)).seconds / 60
+    e_min = ((_window_idx * _windows_len) % timedelta(hours=1) + _windows_len).seconds / 60
+    _window_od = _od.loc[(_od[time_col].dt.hour == hour)
+                         & (_od[time_col].dt.minute > s_min) & (_od[time_col].dt.minute < e_min)]
+    return _window_od
+
+
 if __name__ == '__main__':
     display.configure_logging()
     display.configure_pandas()
 
     parser = argparse.ArgumentParser(description='Transition Prediction Data Preparation')
     parser.add_argument('--task', type=str, default='p2d', choices=['p2d', 'd2p'])
+    parser.add_argument('--windows', type=int, default=24)
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--hotspot', action='store_true')
     group.add_argument('--grid', action='store_true')
@@ -110,12 +120,13 @@ if __name__ == '__main__':
     # Hyper-parameters
     m, n = 100, 200
     neighbor_num = 3
+    time_window_len = timedelta(days=1) / args.windows
 
-    # ################### p2d train ########################
+    # ################### train ########################
     # Load all transactions
     df_train_od = data_loader.load_od(scale='full', common=False)
     # Load additional distance information.
-    df_train_od_with_dis = data_loader.load_od(with_distance=True)
+    # df_train_od_with_dis = data_loader.load_od(with_distance=True)
     # Load ET transactions
     df_train_et_od = data_loader.load_od(scale='full', common=True)
     if 'd2p' == args.task:
@@ -126,24 +137,27 @@ if __name__ == '__main__':
     df_train_cs = df_train_cs.loc[~df_train_cs['cs_name'].isin(['LJDL', 'E04', 'BN0002', 'F11', 'S1', 'S2',
                                                                 'F12', 'F13', 'F15'])]
     df_train_cs.reset_index(drop=True, inplace=True)
+    train_f_set = []
+    for window in range(args.windows):
+        window_od = select_window_od(df_train_od, time_window_len, window, time_col='begin_time')
+        window_et_od = select_window_od(df_train_et_od, time_window_len, window, time_col='begin_time')
+        # statistically count the transition demand.
+        train_demand = extract_transition_demand(window_od)
+        train_et_demand = extract_transition_demand(window_et_od)
+        # merge the demand
+        df_train_demands = build_composite_demands(train_demand, train_et_demand)
+        df_train_unique_od = transitions_spatial_temporal_info_completion(window_od, df_train_demands)
+        # Build feature
+        train_feature = feature_extraction(df_train_unique_od, df_train_cs)
+        train_f_set.append(train_feature)
 
-    # statistically count the transition demand.
-    train_demand = extract_transition_demand(df_train_od)
-    train_et_demand = extract_transition_demand(df_train_et_od)
-    # merge the demand
-    df_train_demands = build_composite_demands(train_demand, train_et_demand)
-    # attach to the transactions
-    df_train_unique_od = build_final_transitions(df_train_od, df_train_demands)
-    # Build feature
-    p2d_train_feature = feature_extraction(df_train_unique_od, df_train_cs)
-
-    # ################### p2d val ########################
+    # ################### val ########################
     val_od = pd.read_csv("data/od/201706_od.csv")
     val_et_od = pd.read_csv("data/od/201706_et_od.csv")
     df_val_cs = pd.read_csv("data/charging_station/ChargeLocation201706_wgs84.csv")
 
     # Feature extraction
-    train_fuel_unique_od = build_final_transitions(df_train_od, train_demand)
+    train_fuel_unique_od = transitions_spatial_temporal_info_completion(df_train_od, train_demand)
     p2d_val_feature = feature_extraction(train_fuel_unique_od, df_val_cs, _neighbor_num=neighbor_num)
 
     # Demand ground truth
@@ -157,7 +171,7 @@ if __name__ == '__main__':
                           on=['original_cube', 'destination_cube'], how="left").fillna(0)
 
     # ################### Save to local ########################
-    np.save(conf["mobility"]["transition"]["utility_xgboost"][args.task]["train_feature"], p2d_train_feature)
+    np.save(conf["mobility"]["transition"]["utility_xgboost"][args.task]["train_feature"], train_feature)
     df_train_demands.to_csv(conf["mobility"]["transition"]["utility_xgboost"][args.task]["train_gt"], index=False)
     train_fuel_unique_od.to_csv(conf["mobility"]["transition"]["utility_xgboost"][args.task]["val_od"], index=False)
     np.save(conf["mobility"]["transition"]["utility_xgboost"][args.task]["val_feature"], p2d_val_feature)
