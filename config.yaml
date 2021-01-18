@@ -1,4 +1,4 @@
-project_path: "D:\electric-taxi-mobility-master"
+project_path: "C:\\Users\\hkrep\\PycharmProjects\\electric-taxi-mobility"
 
 trajectory:
   raw: "data/history_trajectories.csv"
@@ -27,6 +27,11 @@ mobility:
     p2d:
       distance: "result/mobility/transition/p2d_distance.npy"
       duration: "result/mobility/transition/p2d_duration.npy"
+
+      train_feature_all_pairs: "data/mobility/transition/p2d_train_feature_all_pairs.csv"
+      train_demands: "data/mobility/transition/p2d_train_demands.pkl"
+      val_feature_all_pairs: "data/mobility/transition/p2d_val_feature_all_pairs.csv"
+      val_demands: "data/mobility/transition/p2d_val_demands.pkl"
     d2p:
       distance: "result/mobility/transition/d2p_distance.npy"
       duration: "result/mobility/transition/d2p_duration.npy"
@@ -63,4 +68,4 @@ mobility:
   resting: "result/mobility/resting.pkl"
 generation:
   schedule: "result/generation/schedule.pkl"
-  result: "result/generation/generated_trajectories.csv"
+  result: "result/generation/generated_trajectories.parquet"
