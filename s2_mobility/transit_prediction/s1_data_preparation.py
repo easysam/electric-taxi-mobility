@@ -113,7 +113,7 @@ if __name__ == '__main__':
     group.add_argument('--grid', action='store_true')
     args = parser.parse_args()
     # configure the working directory to the project root path
-    with open("../../config.yaml", "r", encoding="utf8") as f:
+    with open("config.yaml", "r", encoding="utf8") as f:
         conf = yaml.load(f, Loader=yaml.FullLoader)
     os.chdir(conf["project_path"])
 
@@ -137,38 +137,45 @@ if __name__ == '__main__':
     df_train_cs = df_train_cs.loc[~df_train_cs['cs_name'].isin(['LJDL', 'E04', 'BN0002', 'F11', 'S1', 'S2',
                                                                 'F12', 'F13', 'F15'])]
     df_train_cs.reset_index(drop=True, inplace=True)
+
+    # Feature extraction
+    demands_all_pairs = extract_transition_demand(df_train_od, threshold=10)
+    info_all_pairs = transitions_spatial_temporal_info_completion(df_train_od, demands_all_pairs)
+    feature_all_pairs = feature_extraction(info_all_pairs, df_train_cs)
+    # Demand extraction
     train_f_set = []
+    all_types_demands_all_pairs = []
     for window in range(args.windows):
-        window_od = select_window_od(df_train_od, time_window_len, window, time_col='begin_time')
-        window_et_od = select_window_od(df_train_et_od, time_window_len, window, time_col='begin_time')
+        window_17et_od = select_window_od(df_train_od, time_window_len, window, time_col='begin_time')
+        window_14et_od = select_window_od(df_train_et_od, time_window_len, window, time_col='begin_time')
         # statistically count the transition demand.
-        train_demand = extract_transition_demand(window_od)
-        train_et_demand = extract_transition_demand(window_et_od)
+        train_demand = extract_transition_demand(window_17et_od, threshold=10)
+        train_et_demand = extract_transition_demand(window_14et_od, threshold=10)
         # merge the demand
         df_train_demands = build_composite_demands(train_demand, train_et_demand)
-        df_train_unique_od = transitions_spatial_temporal_info_completion(window_od, df_train_demands)
-        # Build feature
-        train_feature = feature_extraction(df_train_unique_od, df_train_cs)
-        train_f_set.append(train_feature)
+        all_types_demands_all_pairs.append(df_train_demands)
 
     # ################### val ########################
-    val_od = pd.read_csv("data/od/201706_od.csv")
     val_et_od = pd.read_csv("data/od/201706_et_od.csv")
     df_val_cs = pd.read_csv("data/charging_station/ChargeLocation201706_wgs84.csv")
 
     # Feature extraction
-    train_fuel_unique_od = transitions_spatial_temporal_info_completion(df_train_od, train_demand)
-    p2d_val_feature = feature_extraction(train_fuel_unique_od, df_val_cs, _neighbor_num=neighbor_num)
-
+    p2d_val_feature = feature_extraction(info_all_pairs, df_val_cs, _neighbor_num=neighbor_num)
     # Demand ground truth
-    val_et_demand = extract_transition_demand(val_et_od, threshold=0)
-    p2d_val_gt = pd.merge(train_demand.rename(columns={"demand": "demand_all"}),
-                          val_et_demand.rename(columns={"demand": "demand_17_et"}),
-                          left_on=['original_cube', 'destination_cube'], right_on=['original_cube', 'destination_cube'],
-                          how="left").fillna(0)
-    et_14_demand = extract_transition_demand(df_train_et_od, threshold=0)
-    p2d_val_gt = pd.merge(p2d_val_gt, et_14_demand.rename(columns={"demand": "demand_14_et"}),
-                          on=['original_cube', 'destination_cube'], how="left").fillna(0)
+    val_gt = []
+    for window in range(args.windows):
+        window_17et_od = select_window_od(val_et_od, time_window_len, window, time_col='begin_time')
+        window_14et_od = select_window_od(df_train_et_od, time_window_len, window, time_col='begin_time')
+        val_window_et_demand = extract_transition_demand(window_17et_od, threshold=0)
+        val_window_gt = pd.merge(all_types_demands_all_pairs[window].rename(columns={'demand': 'demand_all'}),
+                                 val_window_et_demand.rename(columns={'demand': 'demand_17_et'}),
+                                 left_on=['original_cube', 'destination_cube'],
+                                 right_on=['original_cube', 'destination_cube'],
+                                 how="left").fillna(0)
+        window_demand_14et = extract_transition_demand(window_14et_od, threshold=0)
+        val_window_gt = pd.merge(val_window_gt, window_demand_14et.rename(columns={'demand': 'demand_14et'}),
+                                 on=['original_cube', 'destination_cube'], how="left").fillna(0)
+        val_gt.append(val_window_gt)
 
     # ################### Save to local ########################
     np.save(conf["mobility"]["transition"]["utility_xgboost"][args.task]["train_feature"], train_feature)
