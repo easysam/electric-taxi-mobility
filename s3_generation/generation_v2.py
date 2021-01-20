@@ -85,9 +85,9 @@ def single_period_generation(_id, ts, _loc, _r, _traveled=0):
                 data = torch.from_numpy(where2charge_f.to_numpy()).to(device).float()
                 data = data.view(-1, len(cs.index), len(where2charge_f.columns))
                 output = where2charge(data)
-                # output = softmax(output).view(-1).cpu().detach().numpy()
-                output = output.view(-1).cpu().detach().numpy()
-                output = normalize(output.reshape(1, -1), norm='l1').reshape(-1)
+                output = softmax(output).view(-1).cpu().detach().numpy()
+                # output = output.view(-1).cpu().detach().numpy()
+                # output = normalize(output.reshape(1, -1), norm='l1').reshape(-1)
                 station_idx = np.random.choice(len(output), 1, p=output).item()
                 state = 'charging'
                 continue
@@ -98,7 +98,13 @@ def single_period_generation(_id, ts, _loc, _r, _traveled=0):
                 continue
             # Move on to the occupied stated
             _loc_prev = _loc
-            _loc = np.random.choice(np.arange(len(idx_map['d2p_p'])), size=1, p=d2p_prob[_loc_prev]).item()
+            try:
+                _loc = np.random.choice(np.arange(len(idx_map['d2p_p'])), size=1,
+                                        p=d2p_tensor[ts_datetime.hour, _loc_prev]).item()
+            except ValueError:
+                print(d2p_tensor[ts_datetime.hour, _loc_prev].sum())
+                print('d2p', ts_datetime.hour, _loc_prev)
+                exit(0)
             ts += 10 * (d2p_dur[_loc_prev][_loc] if d2p_dur[_loc_prev][_loc] != 0 else 20)
             _traveled += 2 * (d2p_dis[_loc_prev][_loc] if d2p_dis[_loc_prev][_loc] != 0 else 250)
             _trajectory.loc[len(_trajectory)] = ['pick-up', ts_datetime, idx_map['d2p_p'][_loc], _traveled, None, None,
@@ -109,7 +115,13 @@ def single_period_generation(_id, ts, _loc, _r, _traveled=0):
         elif 'occupied' == state:
             ts_datetime = init_t + timedelta(seconds=ts)
             _loc_prev = _loc
-            _loc = np.random.choice(np.arange(len(idx_map['p2d_d'])), size=1, p=p2d_prob[_loc_prev]).item()
+            try:
+                _loc = np.random.choice(np.arange(len(idx_map['p2d_d'])), size=1,
+                                        p=p2d_tensor[ts_datetime.hour, _loc_prev]).item()
+            except ValueError:
+                print(p2d_tensor[ts_datetime.hour, _loc_prev].sum())
+                print('p2d', ts_datetime.hour, _loc_prev)
+                exit(0)
             ts += p2d_dur[_loc_prev][_loc] if p2d_dur[_loc_prev][_loc] != 0 else 20
             _traveled += d2p_dis[_loc_prev][_loc] if d2p_dis[_loc_prev][_loc] != 0 else 250
             _trajectory.loc[len(_trajectory)] = ['drop-off', ts_datetime, idx_map['p2d_d'][_loc], _traveled, None, None,
@@ -137,8 +149,8 @@ if __name__ == '__main__':
     os.chdir(conf["project_path"])
     display.configure_logging()
     parser = argparse.ArgumentParser()
-    parser.add_argument('--n', type=int, default=10)
-    parser.add_argument('--day', type=int, default=7)
+    parser.add_argument('--n', type=int, default=1000)
+    parser.add_argument('--day', type=int, default=3)
     parser.add_argument('--local_schedule', action='store_true')
     args = parser.parse_args()
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -146,10 +158,14 @@ if __name__ == '__main__':
     # Key parameter: ET number and charger distribution
     n = args.n
     day = args.day
-    cs = pd.read_csv(conf['cs']['val'], usecols=['lng', 'lat', 'chg_points'])
+
+    # cs = pd.read_csv(conf['cs']['val'], usecols=['lng', 'lat', 'chg_points'])
+    cs = pd.read_csv('s3_generation/cs_program1/cs_info.csv', usecols=['lng', 'lat', 'chg_points'])
     cs_loc = cs[['lat', 'lng']].to_numpy()
     # Mobility pattern
     # 1. transition pattern
+    p2d_tensor = np.load(conf['mobility']['transition']['p2d']['gt_transition_tensor'])
+    d2p_tensor = np.load(conf['mobility']['transition']['d2p']['gt_transition_tensor'])
     p2d_prob = normalize(np.load(conf['mobility']['transition']['utility_xgboost']['p2d']['prob_mat']), norm='l1')
     p2d_dis = np.load(conf['mobility']['transition']['p2d']['distance'])
     p2d_dur = np.load(conf['mobility']['transition']['p2d']['duration'])
@@ -168,7 +184,7 @@ if __name__ == '__main__':
         whether2charge_scaler = pickle.load(f)
     where2charge = Where2Charge()
     where2charge.to(device)
-    where2charge.load_state_dict(torch.load(conf["mobility"]["charge"]["where_model"] + '.best'))
+    where2charge.load_state_dict(torch.load(conf["mobility"]["charge"]["where_model"] + '.new_div_best'))
     where2charge.eval()
     softmax = torch.nn.Softmax(dim=1)
     # 3. resting pattern
@@ -215,5 +231,6 @@ if __name__ == '__main__':
         sub_trajectories, t[i], loc[i], s[i], traveled[i], c[i], r[i] = single_period_generation(i, t[i] + q + c[i],
                                                                                                  init_l[i], r[i])
         trajectories[i] = pd.concat([trajectories[i], sub_trajectories])
-    pd.concat(trajectories, keys=np.arange(n), names=['id', 'foo']).droplevel('foo').to_parquet(
-        conf['generation']['result'])
+    # pd.concat(trajectories, keys=np.arange(n), names=['id', 'foo']).droplevel('foo').to_parquet(
+    #     conf['generation']['result'])
+    pd.concat(trajectories, keys=np.arange(n), names=['id', 'foo']).droplevel('foo').to_parquet('result/generation/2')

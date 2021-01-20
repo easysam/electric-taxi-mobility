@@ -11,8 +11,9 @@ if __name__ == '__main__':
         conf = yaml.load(f, Loader=yaml.FullLoader)
     os.chdir(conf["project_path"])
 
-    prediction = pd.read_parquet(conf['generation']['result'])
+    prediction = pd.read_parquet('result/generation/2')
     print((prediction['station'].value_counts() / prediction['station'].value_counts().sum()).head(30))
+    print((prediction['station'].value_counts().iloc[:100].index < 100).sum())
     # print(
     #     prediction.loc[prediction['event'] == 'charging', 'queuing'].describe(
     #         percentiles=[0.5, 0.6, 0.7, 0.8, 0.9]))

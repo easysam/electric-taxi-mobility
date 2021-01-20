@@ -16,15 +16,15 @@ if __name__ == '__main__':
     col_name = {"O_longitude": "original_log", "O_latitude": "original_lat", "D_longitude": "destination_log",
                 "D_latitude": "destination_lat", "O_date_time": "begin_time", "D_date_time": "end_time"}
 
-    # aggregate
-    dd_od = dd.read_csv("data/od/201706/realiable_OD/*", include_path_column=True)
-    dd_od = dd_od.rename(columns=col_name)
-    dd_od = dd_od.drop(["O_difference", "D_difference"], axis=1)
-    with ProgressBar():
-        df_od = dd_od.compute()
-    df_od["id"] = df_od["path"].str.rsplit('/', n=1, expand=True)[1]
-    df_od.drop("path", axis=1, inplace=True)
-    df_od.to_csv("data/od/201706_od.csv", index=False)
+    # # aggregate
+    # dd_od = dd.read_csv("data/od/201706/realiable_OD/*", include_path_column=True)
+    # dd_od = dd_od.rename(columns=col_name)
+    # dd_od = dd_od.drop(["O_difference", "D_difference"], axis=1)
+    # with ProgressBar():
+    #     df_od = dd_od.compute()
+    # df_od["id"] = df_od["path"].str.rsplit('/', n=1, expand=True)[1]
+    # df_od.drop("path", axis=1, inplace=True)
+    # df_od.to_csv("data/od/201706_od.csv", index=False)
 
     _2017_et = pd.read_csv("data/201706_et_list_(license_is_Ecar)", )
     _2017_et = _2017_et.loc[_2017_et["is_Ecar"], "license"].to_list()

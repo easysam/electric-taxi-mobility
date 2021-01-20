@@ -8,6 +8,7 @@ from torch.utils.data import Dataset, DataLoader
 import statistics
 import time
 import yaml
+from sklearn.preprocessing import normalize
 from utils import display
 
 
@@ -38,20 +39,22 @@ class Where2Charge(torch.nn.Module):
         self.l2 = torch.nn.Linear(16, 32)
         self.l3 = torch.nn.Linear(32, 16)
         self.l4 = torch.nn.Linear(16, 1)
+        self.bn1 = torch.nn.BatchNorm1d(16)
+        self.bn2 = torch.nn.BatchNorm1d(32)
+        self.bn3 = torch.nn.BatchNorm1d(16)
         self.relu1 = torch.nn.ReLU()
         self.relu2 = torch.nn.ReLU()
         self.relu3 = torch.nn.ReLU()
-        self.relu4 = torch.nn.ReLU()
 
     # @torchsnooper.snoop()
     def forward(self, x):
         y = []
         for i in range(x.shape[1]):
             tmp_x = x[:, i].float()
-            tmp_x = self.relu1(self.l1(tmp_x))
-            tmp_x = self.relu2(self.l2(tmp_x))
-            tmp_x = self.relu3(self.l3(tmp_x))
-            tmp_x = self.relu4(self.l4(tmp_x))
+            tmp_x = self.relu1(self.bn1(self.l1(tmp_x)))
+            tmp_x = self.relu2(self.bn2(self.l2(tmp_x)))
+            tmp_x = self.relu3(self.bn3(self.l3(tmp_x)))
+            tmp_x = self.l4(tmp_x)
             y.append(tmp_x)
         return torch.cat(y, -1)
 
@@ -65,7 +68,8 @@ def train(epoch, train_loader):
         output = model(data).to(device)
         softmax = torch.nn.Softmax(dim=1)
         output = softmax(output)
-        loss = criterion(output, target)
+        temp = torch.log(output)
+        loss = criterion(temp, target)
 
         loss.backward()
         optimizer.step()
@@ -106,14 +110,14 @@ if __name__ == '__main__':
     model = Where2Charge()
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model.to(device)
-    criterion = torch.nn.MSELoss(reduction='mean')
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.5)
+    criterion = torch.nn.KLDivLoss(reduction='batchmean')
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=1e-5)
 
     # Save a time stamp
     print("Start training...")
     since = time.time()
     loss_value = []
-    total_epoch = 100
+    total_epoch = 50
     min_running_loss = 100
     for epoch in range(0, total_epoch):
         running_loss = 0.0
@@ -123,7 +127,7 @@ if __name__ == '__main__':
         m, s = divmod(time.time() - epoch_start, 60)
         print('epoch:', epoch, f'Training time: {m:.0f}m {s:.0f}s', 'avg_loss: ', running_loss)
         if running_loss < min_running_loss:
-            torch.save(model.state_dict(), conf["mobility"]["charge"]["where_model"] + '.best')
+            torch.save(model.state_dict(), conf["mobility"]["charge"]["where_model"] + '.new_div_best')
             min_running_loss = running_loss
     plt.plot(loss_value)
     plt.show()

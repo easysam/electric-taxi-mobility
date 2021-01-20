@@ -53,5 +53,7 @@ if __name__ == '__main__':
 
     # Postprocessing: build transition probability matrix for task (p2d or d2p)
     gt['pred'] = gt['demand_all'] * gt['pred_rate']
+
     mat = gt.pivot(index='original_cube', columns='destination_cube', values='pred').fillna(0)
+    gt.to_csv(conf['mobility']['transition']['utility_xgboost'][args.task]['prob_mat_incomplete'], index=False)
     mat.to_csv(conf['mobility']['transition']['utility_xgboost'][args.task]['prob_mat_incomplete'])

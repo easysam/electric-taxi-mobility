@@ -5,9 +5,11 @@ trajectory:
 
 od:
   raw1407:
-    "data/od/transaction_201407.csv"
+    "data/od/od_201407.pqt"
   distance:
     "data/od/od_with_distance_between_before.csv"
+  raw1706: "data/od/201706_et_od.csv"
+  raw1706_pqt: "data/od/201706_et_od.pqt"
 
 hotspot:
   14et_drop-off: "data/hotspot/full_drop_clusters.list-of_dict_v4"
@@ -16,6 +18,7 @@ hotspot:
 
 cs:
   val: "result/charging_station/ChargeLocation201706_wgs84.csv"
+  val_cdzs: "data/charging_station/chongdianzaishou_wgs84.csv"
 
 mobility:
   transition:
@@ -32,9 +35,11 @@ mobility:
       train_demands: "data/mobility/transition/p2d_train_demands.pkl"
       val_feature_all_pairs: "data/mobility/transition/p2d_val_feature_all_pairs.csv"
       val_demands: "data/mobility/transition/p2d_val_demands.pkl"
+      gt_transition_tensor: "result/mobility/transition/p2d_gt_transition_tensor.npy"
     d2p:
       distance: "result/mobility/transition/d2p_distance.npy"
       duration: "result/mobility/transition/d2p_duration.npy"
+      gt_transition_tensor: "result/mobility/transition/d2p_gt_transition_tensor.npy"
 
     utility_xgboost:
       p2d:
@@ -45,6 +50,7 @@ mobility:
         val_gt: "data/mobility/transition/utility_xgboost/p2d_val_gt.csv"
         model: "result/mobility/transition/utility_xgboost/p2d_XGBRegressor.pkl"
         scaler: "result/mobility/transition/utility_xgboost/p2d_StandardScaler.pkl"
+        result: "result/mobility/transaction/utility_xgboost/p2d_result.csv"
         prob_mat_incomplete: "data/mobility/transition/utility_xgboost/p2d_prob_mat.csv"
         prob_mat: "result/mobility/transition/utility_xgboost/p2d_prob_mat.npy"
 
