@@ -35,11 +35,11 @@ mobility:
       train_demands: "data/mobility/transition/p2d_train_demands.pkl"
       val_feature_all_pairs: "data/mobility/transition/p2d_val_feature_all_pairs.csv"
       val_demands: "data/mobility/transition/p2d_val_demands.pkl"
-      gt_transition_tensor: "result/mobility/transition/p2d_gt_transition_tensor.npy"
+      gt_transition_tensor: "result/mobility/transition/p2d_gt_transition_tensor.npz"
     d2p:
       distance: "result/mobility/transition/d2p_distance.npy"
       duration: "result/mobility/transition/d2p_duration.npy"
-      gt_transition_tensor: "result/mobility/transition/d2p_gt_transition_tensor.npy"
+      gt_transition_tensor: "result/mobility/transition/d2p_gt_transition_tensor.npz"
 
     utility_xgboost:
       p2d:

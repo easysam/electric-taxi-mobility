@@ -73,5 +73,4 @@ if __name__ == '__main__':
 
         transition_tensor[w] = normalize(window_mat.to_numpy(), norm='l1')
 
-
-    np.save(conf['mobility']['transition'][args.task]['gt_transition_tensor'], transition_tensor)
+    np.savez_compressed(conf['mobility']['transition'][args.task]['gt_transition_tensor'], transition_tensor)
