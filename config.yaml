@@ -4,7 +4,7 @@ trajectory:
   raw: "data/history_trajectories.csv"
 
 od:
-  raw1407:
+  raw1407_pqt:
     "data/od/od_201407.pqt"
   distance:
     "data/od/od_with_distance_between_before.csv"
@@ -36,10 +36,17 @@ mobility:
       val_feature_all_pairs: "data/mobility/transition/p2d_val_feature_all_pairs.csv"
       val_demands: "data/mobility/transition/p2d_val_demands.pkl"
       gt_transition_tensor: "result/mobility/transition/p2d_gt_transition_tensor.npz"
+      14et_tensor: "result/mobility/transition/p2d_14et_transition_tensor.npz"
+      14all_tensor: "result/mobility/transition/p2d_14all_transition_tensor.npz"
+      17pred_tensor: "result/mobility/transition/p2d_17pred_transition_tensor.npz"
+
     d2p:
       distance: "result/mobility/transition/d2p_distance.npy"
       duration: "result/mobility/transition/d2p_duration.npy"
       gt_transition_tensor: "result/mobility/transition/d2p_gt_transition_tensor.npz"
+      14et_tensor: "result/mobility/transition/d2p_14et_transition_tensor.npz"
+      14all_tensor: "result/mobility/transition/d2p_14all_transition_tensor.npz"
+      17pred_tensor: "result/mobility/transition/d2p_17pred_transition_tensor.npz"
 
     utility_xgboost:
       p2d:
@@ -50,7 +57,7 @@ mobility:
         val_gt: "data/mobility/transition/utility_xgboost/p2d_val_gt.csv"
         model: "result/mobility/transition/utility_xgboost/p2d_XGBRegressor.pkl"
         scaler: "result/mobility/transition/utility_xgboost/p2d_StandardScaler.pkl"
-        result: "result/mobility/transaction/utility_xgboost/p2d_result.csv"
+        result: "result/mobility/transition/utility_xgboost/p2d_result.csv"
         prob_mat_incomplete: "data/mobility/transition/utility_xgboost/p2d_prob_mat.csv"
         prob_mat: "result/mobility/transition/utility_xgboost/p2d_prob_mat.npy"
 
@@ -62,6 +69,7 @@ mobility:
         val_gt: "data/mobility/transition/utility_xgboost/d2p_val_gt.csv"
         model: "result/mobility/transition/utility_xgboost/d2p_XGBRegressor.pkl"
         scaler: "result/mobility/transition/utility_xgboost/d2p_StandardScaler.pkl"
+        result: "result/mobility/transition/utility_xgboost/d2p_result.csv"
         prob_mat_incomplete: "data/mobility/transition/utility_xgboost/d2p_prob_mat.csv"
         prob_mat: "result/mobility/transition/utility_xgboost/d2p_prob_mat.npy"
   charge:

@@ -31,6 +31,8 @@ if __name__ == '__main__':
     os.chdir(conf["project_path"])
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', type=str, default='p2d', choices=['p2d', 'd2p'])
+    parser.add_argument('--target_tensor', type=str,
+                        choices=['gt_transition_tensor', '14et_tensor', '14all_tensor', '17pred_tensor'])
     parser.add_argument('--window_num', type=int, default=24)
     args = parser.parse_args()
     window_len = timedelta(days=1) / args.window_num
@@ -42,17 +44,31 @@ if __name__ == '__main__':
     else:
         row_cubes, col_cubes = idx_inverse_map['d2p_d'], idx_inverse_map['d2p_p']
 
-    val_od = pd.read_parquet(conf['od']['raw1706_pqt'])
-    val_od.rename(columns={'id': "Licence"}, inplace=True)
+    if '14et_tensor' == args.target_tensor:
+        od = pd.read_csv('data/transaction_common_201406.csv', parse_dates=['begin_time', 'end_time'])
+    elif '14all_tensor' == args.target_tensor:
+        od = pd.read_parquet(conf['od']['raw1407_pqt'])
+    elif 'gt_transition_tensor' == args.target_tensor:
+        od = pd.read_parquet(conf['od']['raw1706_pqt'])
+        od.rename(columns={'id': "Licence"}, inplace=True)
+    else:
+        od = pd.read_parquet(conf['od']['raw1407_pqt'])
+        coefficient = pd.read_csv(conf['mobility']['transition']['utility_xgboost'][args.task]['result']).pivot(
+            index='original_cube', columns='destination_cube', values='pred_rate').fillna(0)
+        miss_col = list(set(col_cubes.keys()) - set(coefficient.columns.astype(dtype=int).tolist()))
+        miss_row = np.array(list(set(row_cubes.keys()) - set(coefficient.index.tolist())), dtype=np.float32)
+        coefficient[miss_col] = 0.
+        coefficient = coefficient.reindex(sorted(coefficient.columns), axis=1)
+        coefficient = matrix_completion(miss_row, coefficient)
+
     if 'd2p' == args.task:
-        val_od = make_d2p_od(val_od)
-    val_od = od_utils.filter_in_bbox(val_od)
-    val_od = generate_cube_index(val_od, m=100, n=200)
+        od = make_d2p_od(od)
+    od = od_utils.filter_in_bbox(od)
+    od = generate_cube_index(od, m=100, n=200)
     transition_tensor = np.zeros((args.window_num, len(row_cubes), len(col_cubes)))
     for w in tqdm(range(args.window_num)):
-        window_od = select_window_od(val_od, window_len, w, time_col='begin_time').copy()
+        window_od = select_window_od(od, window_len, w, time_col='begin_time').copy()
         window_demand = extract_transition_demand(window_od, threshold=0)
-
         window_mat = window_demand.pivot(index='original_cube', columns='destination_cube', values='demand')
         window_mat.fillna(0, inplace=True)
 
@@ -62,15 +78,19 @@ if __name__ == '__main__':
         window_mat.drop(list(row - set(row_cubes.keys())), inplace=True)
         window_mat.drop(list(col - set(col_cubes.keys())), axis=1, inplace=True)
         window_mat.drop(window_mat.index[0 == window_mat.sum(axis=1)], inplace=True)
+        row = set(window_mat.index.tolist())
 
         missing_col = list(set(col_cubes.keys()) - col)
         window_mat[missing_col] = 0.
         window_mat = window_mat.reindex(sorted(window_mat.columns), axis=1)
-
-        row = set(window_mat.index.tolist())
         missing_row = np.array(list(set(row_cubes.keys()) - row), dtype=np.float32)
         window_mat = matrix_completion(missing_row, window_mat)
-
+        if '17pred_tensor' == args.target_tensor:
+            window_mat = window_mat * coefficient
+            window_mat.drop(window_mat.index[0 == window_mat.sum(axis=1)], inplace=True)
+            row = set(window_mat.index.tolist())
+            missing_row = np.array(list(set(row_cubes.keys()) - row), dtype=np.float32)
+            window_mat = matrix_completion(missing_row, window_mat)
         transition_tensor[w] = normalize(window_mat.to_numpy(), norm='l1')
 
-    np.savez_compressed(conf['mobility']['transition'][args.task]['gt_transition_tensor'], transition_tensor)
+    np.savez_compressed(conf['mobility']['transition'][args.task][args.target_tensor], transition_tensor)

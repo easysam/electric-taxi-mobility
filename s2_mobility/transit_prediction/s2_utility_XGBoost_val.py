@@ -55,5 +55,5 @@ if __name__ == '__main__':
     gt['pred'] = gt['demand_all'] * gt['pred_rate']
 
     mat = gt.pivot(index='original_cube', columns='destination_cube', values='pred').fillna(0)
-    gt.to_csv(conf['mobility']['transition']['utility_xgboost'][args.task]['prob_mat_incomplete'], index=False)
+    gt.to_csv(conf['mobility']['transition']['utility_xgboost'][args.task]['result'], index=False)
     mat.to_csv(conf['mobility']['transition']['utility_xgboost'][args.task]['prob_mat_incomplete'])

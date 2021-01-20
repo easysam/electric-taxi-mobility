@@ -151,7 +151,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--n', type=int, default=1000)
     parser.add_argument('--day', type=int, default=3)
-    parser.add_argument('--local_schedule', action='store_true')
+    parser.add_argument('--transition_tensor', type=str,
+                        choices=['gt_transition_tensor', '14et_tensor', '14all_tensor', '17pred_tensor'])
+    parser.add_argument('--target_file', type=str, default='pred')
     args = parser.parse_args()
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     EARTH_RADIUS = 6371.0088
@@ -164,8 +166,8 @@ if __name__ == '__main__':
     cs_loc = cs[['lat', 'lng']].to_numpy()
     # Mobility pattern
     # 1. transition pattern
-    p2d_tensor = np.load(conf['mobility']['transition']['p2d']['gt_transition_tensor'])
-    d2p_tensor = np.load(conf['mobility']['transition']['d2p']['gt_transition_tensor'])
+    p2d_tensor = np.load(conf['mobility']['transition']['p2d'][args.transition_tensor])['arr_0']
+    d2p_tensor = np.load(conf['mobility']['transition']['d2p'][args.transition_tensor])['arr_0']
     p2d_prob = normalize(np.load(conf['mobility']['transition']['utility_xgboost']['p2d']['prob_mat']), norm='l1')
     p2d_dis = np.load(conf['mobility']['transition']['p2d']['distance'])
     p2d_dur = np.load(conf['mobility']['transition']['p2d']['duration'])
@@ -233,4 +235,5 @@ if __name__ == '__main__':
         trajectories[i] = pd.concat([trajectories[i], sub_trajectories])
     # pd.concat(trajectories, keys=np.arange(n), names=['id', 'foo']).droplevel('foo').to_parquet(
     #     conf['generation']['result'])
-    pd.concat(trajectories, keys=np.arange(n), names=['id', 'foo']).droplevel('foo').to_parquet('result/generation/2')
+    target_file = 'result/generation/' + args.target_file
+    pd.concat(trajectories, keys=np.arange(n), names=['id', 'foo']).droplevel('foo').to_parquet(target_file)
