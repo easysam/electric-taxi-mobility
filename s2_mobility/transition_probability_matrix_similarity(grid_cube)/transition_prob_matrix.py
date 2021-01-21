@@ -24,7 +24,7 @@ from s2_mobility.transit_prediction.s2_utility_XGBoost_train import kl
 
 if __name__ == '__main__':
     # configure the working directory to the project root path
-    with open("../config.yaml", "r", encoding="utf8") as f:
+    with open("../../config.yaml", "r", encoding="utf8") as f:
         conf = yaml.load(f, Loader=yaml.FullLoader)
     os.chdir(conf["project_path"])
 

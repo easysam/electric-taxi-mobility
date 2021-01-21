@@ -11,9 +11,13 @@ if __name__ == '__main__':
         conf = yaml.load(f, Loader=yaml.FullLoader)
     os.chdir(conf["project_path"])
 
-    prediction = pd.read_parquet('result/generation/2')
+    prediction = pd.read_parquet('result/generation/transition_gt')
     print((prediction['station'].value_counts() / prediction['station'].value_counts().sum()).head(30))
-    print((prediction['station'].value_counts().iloc[:100].index < 100).sum())
+    print((prediction['station'].value_counts().iloc[:10].index < 10).sum())
+    print((prediction['station'].value_counts().iloc[:20].index < 20).sum())
+    print((prediction['station'].value_counts().iloc[:30].index < 30).sum())
+    print((prediction['station'].value_counts().iloc[:30].index < 50).sum())
+    print((prediction['station'].value_counts().iloc[:150].index < 150).sum())
     # print(
     #     prediction.loc[prediction['event'] == 'charging', 'queuing'].describe(
     #         percentiles=[0.5, 0.6, 0.7, 0.8, 0.9]))
@@ -32,4 +36,4 @@ if __name__ == '__main__':
     # print('Total {} stations'.format(trajectories[8].nunique()))
     # print('Total {} vehicles'.format(trajectories[0].nunique()))
 
-    print(prediction.loc[prediction['event']=='charging'])
+    # print(prediction.loc[prediction['event']=='charging'])

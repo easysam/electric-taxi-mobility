@@ -71,7 +71,9 @@ def feature_extraction(_od, _cs, _neighbor_num=3):
                            arr_origin_dis_to_cs_feature[:, :_neighbor_num],
                            arr_capacity_around_origin[:, :_neighbor_num],
                            arr_dest_dis_to_cs_feature[:, :_neighbor_num],
-                           arr_capacity_around_dest[:, :_neighbor_num]), axis=1)
+                           arr_capacity_around_dest[:, :_neighbor_num]
+                           ),
+                          axis=1)
 
 
 def make_d2p_od(raw_od_file, threshold=3600):
@@ -103,7 +105,7 @@ if __name__ == '__main__':
     group.add_argument('--grid', action='store_true')
     args = parser.parse_args()
     # configure the working directory to the project root path
-    with open("../../config.yaml", "r", encoding="utf8") as f:
+    with open("config.yaml", "r", encoding="utf8") as f:
         conf = yaml.load(f, Loader=yaml.FullLoader)
     os.chdir(conf["project_path"])
 
@@ -113,7 +115,8 @@ if __name__ == '__main__':
 
     # ################### p2d train ########################
     # Load all transactions
-    df_train_od = data_loader.load_od(scale='full', common=False)
+    # df_train_od = data_loader.load_od(scale='full', common=False)
+    df_train_od = pd.read_parquet(conf['od']['raw1407_pqt'])
     # Load additional distance information.
     df_train_od_with_dis = data_loader.load_od(with_distance=True)
     # Load ET transactions
@@ -135,13 +138,14 @@ if __name__ == '__main__':
     # attach to the transactions
     df_train_unique_od = build_final_transitions(df_train_od, df_train_demands)
     # Build feature
-    p2d_train_feature = feature_extraction(df_train_unique_od, df_train_cs)
+    p2d_train_feature = feature_extraction(df_train_unique_od, df_train_cs, _neighbor_num=neighbor_num)
 
     # ################### p2d val ########################
-    val_od = pd.read_csv("data/od/201706_od.csv")
-    val_et_od = pd.read_csv("data/od/201706_et_od.csv")
-    df_val_cs = pd.read_csv("data/charging_station/ChargeLocation201706_wgs84.csv")
-
+    val_et_od = pd.read_parquet(conf['od']['raw1706_pqt'])
+    val_et_od.rename(columns={'id': 'Licence'}, inplace=True)
+    df_val_cs = pd.read_csv("s3_generation/cs_program1/cs_info.csv")
+    if 'd2p' == args.task:
+        val_et_od = make_d2p_od(val_et_od)
     # Feature extraction
     train_fuel_unique_od = build_final_transitions(df_train_od, train_demand)
     p2d_val_feature = feature_extraction(train_fuel_unique_od, df_val_cs, _neighbor_num=neighbor_num)

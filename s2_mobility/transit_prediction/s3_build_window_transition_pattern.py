@@ -45,7 +45,7 @@ if __name__ == '__main__':
         row_cubes, col_cubes = idx_inverse_map['d2p_d'], idx_inverse_map['d2p_p']
 
     if '14et_tensor' == args.target_tensor:
-        od = pd.read_csv('data/transaction_common_201406.csv', parse_dates=['begin_time', 'end_time'])
+        od = pd.read_csv('data/transaction_common_201407.csv', parse_dates=['begin_time', 'end_time'])
     elif '14all_tensor' == args.target_tensor:
         od = pd.read_parquet(conf['od']['raw1407_pqt'])
     elif 'gt_transition_tensor' == args.target_tensor:

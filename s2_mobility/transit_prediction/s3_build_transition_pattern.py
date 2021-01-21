@@ -95,7 +95,15 @@ if __name__ == '__main__':
 
     cache_path = conf['mobility']['transition']['transition_cost']['cube_100_200']
     if args.local:
-        transition_cost = pd.read_csv(cache_path, index_col=0)
+        existing_cost = pd.read_csv(cache_path, usecols=['o_cube', 'd_cube', 'path_len', 'travel_time'])
+        transition_cost = pd.merge(transition_cost, existing_cost, how='left', on=['o_cube', 'd_cube'])
+        missing_cost = transition_cost.loc[transition_cost.isna().any(axis=1)].copy()
+        missing_cost.drop(['path_len', 'travel_time'], axis=1, inplace=True)
+        ret = missing_cost.progress_apply(fetch_cost, axis=1)
+        missing_cost = pd.concat([missing_cost, ret], axis=1)
+        transition_cost.dropna(axis=0, inplace=True)
+        transition_cost = pd.concat([transition_cost, missing_cost])
+        transition_cost.to_csv(cache_path, index=False)
     else:
         ret = transition_cost.progress_apply(fetch_cost, axis=1)
         transition_cost = pd.concat([transition_cost, ret], axis=1)
