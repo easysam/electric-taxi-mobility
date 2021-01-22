@@ -109,5 +109,3 @@ if __name__ == '__main__':
     # Show time consumption
     m, s = divmod(time.time() - since, 60)
     print(f'Total Time: {m:.0f}m {s:.0f}s\nModel was trained on {device}!')
-
-    torch.save(model.state_dict(), 'test.test')

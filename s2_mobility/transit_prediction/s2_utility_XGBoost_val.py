@@ -4,7 +4,7 @@ import argparse
 import pickle
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, normalize
 
 from utils import display
 from s2_utility_XGBoost_train import kl
@@ -34,18 +34,18 @@ if __name__ == '__main__':
     gt["pred_rate"] = p2d_pred_y
 
     kl_pred = gt.groupby("original_cube").apply(
-        lambda x: kl(MinMaxScaler().fit_transform(x["demand_17_et"].to_numpy().reshape(-1, 1)),
-                     MinMaxScaler().fit_transform((x["pred_rate"] * x["demand_all"]).to_numpy().reshape(-1, 1)))
+        lambda x: kl(normalize(x["demand_17_et"].to_numpy().reshape(1, -1), axis=1),
+                     normalize((x["pred_rate"] * x["demand_all"]).to_numpy().reshape(1, -1), axis=1))
     )
 
     kl_all = gt.groupby("original_cube").apply(
-        lambda x: kl(MinMaxScaler().fit_transform(x["demand_17_et"].to_numpy().reshape(-1, 1)),
-                     MinMaxScaler().fit_transform(x["demand_all"].to_numpy().reshape(-1, 1)))
+        lambda x: kl(normalize(x["demand_17_et"].to_numpy().reshape(1, -1), axis=1),
+                     normalize(x["demand_all"].to_numpy().reshape(1, -1), axis=1))
     )
 
     kl_et = gt.groupby("original_cube").apply(
-        lambda x: kl(MinMaxScaler().fit_transform(x["demand_17_et"].to_numpy().reshape(-1, 1)),
-                     MinMaxScaler().fit_transform(x["demand_14_et"].to_numpy().reshape(-1, 1)))
+        lambda x: kl(normalize(x["demand_17_et"].to_numpy().reshape(1, -1), axis=1),
+                     normalize(x["demand_14_et"].to_numpy().reshape(1, -1), axis=1))
     )
     print("Kullback–Leibler divergence\nprediction: {:.2f}, 14all: {:.2f}, 14EV: {:.2f}"
           .format(kl_pred.mean(), kl_all.mean(), kl_et.mean())

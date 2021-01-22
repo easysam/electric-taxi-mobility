@@ -7,7 +7,7 @@ import xgboost
 import numpy as np
 import pandas as pd
 
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, normalize
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 
@@ -83,8 +83,8 @@ if __name__ == '__main__':
     p2d_val_y_for_kl = _p2d_val_y.copy()
     p2d_val_y_for_kl["pred_rate"] = p2d_pred_y
     kl = p2d_val_y_for_kl.groupby("original_cube").apply(
-        lambda x: kl(MinMaxScaler().fit_transform((x["pred_rate"]*x["demand_all"]).to_numpy().reshape(-1, 1)),
-                     MinMaxScaler().fit_transform((x["demand_et"]).to_numpy().reshape(-1, 1)))
+        lambda x: kl(normalize((x["pred_rate"]*x["demand_all"]).to_numpy().reshape(1, -1), axis=1),
+                     normalize((x["demand_et"]).to_numpy().reshape(1, -1), axis=1))
     )
     print("Kullback–Leibler divergence: {:.4f}".format(kl.mean()))
 
