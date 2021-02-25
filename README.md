@@ -36,7 +36,10 @@ In linux, run code like this: `PYTHONPATH="${PYTHONPATH}:$(pwd)" python s3_gener
 
 **Stage 3** data generation
 
-1. `generation.py`
+`generation.py` is an old version of trajectory generation method, individually generating trajectory for each EV taxi. 
+
+`generation_v2.py` is the latest version of trajectory generation method, which take queuing phenomenon 
+into consideration.
 
 #### 1.2.2 Other Purpose
 
