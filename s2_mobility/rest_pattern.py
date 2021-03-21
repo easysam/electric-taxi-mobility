@@ -23,7 +23,7 @@ if __name__ == '__main__':
     plate_day_counts = plate_day_counts.unstack(level=-1).fillna(0)
     plate_times = plate_day_counts.mean(axis=1).round().astype(int)
     resting_times = (plate_times.value_counts() / plate_times.size).sort_index()
-
+    print(resting_times)
     # Fig 1: 考察开始休息时间的分布
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
