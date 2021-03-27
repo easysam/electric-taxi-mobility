@@ -7,8 +7,7 @@ def configure_logging():
     return
 
 
-def configure_pandas():
-    desired_width = 1280
-    pd.set_option('display.width', desired_width)
-    pd.set_option('display.max_columns', 20)
+def configure_pandas(_width=1000, _columns=20):
+    pd.set_option('display.width', _width)
+    pd.set_option('display.max_columns', _columns)
     return

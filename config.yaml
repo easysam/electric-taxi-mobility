@@ -17,8 +17,20 @@ hotspot:
   14_drop-off: "data/hotspot/f14d.list_of_dict"
 
 cs:
-  val: "result/charging_station/ChargeLocation201706_wgs84.csv"
-  val_cdzs: "data/charging_station/chongdianzaishou_wgs84.csv"
+  # TC is from transportation committee, val_TC old name: val
+  val_TC: "result/charging_station/ChargeLocation201706_wgs84.csv"
+  raw:
+    pengchengchong: "data/charging_station/鹏城充_wgs84.csv"
+    chongdianba: "data/charging_station/充电吧wgs84.csv"
+  filtered_sorted:
+    pengchengchong: "result/charging_station/pengchengchong_freq_desc.csv"
+    chongdianba: "result/charging_station/chongdianba_freq_desc.csv"
+
+ce:
+  cluster: "data/charging_event/charging_event_30min_200m_53station.parquet"
+  TC: "data/charging_event/charging_event_30min_200m_79station.parquet"
+  pengchengchong: "data/charging_event/charging_event_30min_200m_531station.parquet"
+  chongdianba: "data/charging_event/charging_event_30min_200m_cdb.parquet"
 
 mobility:
   transition:
